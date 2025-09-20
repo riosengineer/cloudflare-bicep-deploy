@@ -1,0 +1,10 @@
+{
+  "experimentalFeaturesEnabled": {
+    "localDeploy": true
+  },
+  "extensions": {
+    "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:1.0.0" // ACR
+    // "CloudFlare": "../bin/cloudflare" // local
+  },
+  "implicitExtensions": []
+}
