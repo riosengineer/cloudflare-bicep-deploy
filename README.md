@@ -1,6 +1,6 @@
 # CloudFlare Bicep Extension (Experimental)
 
-A custom Azure Bicep extension for creating CloudFlare DNS resources through Infrastructure as Code (IaC).
+A custom Azure Bicep extension for creating CloudFlare DNS resources through Infrastructure as Code (IaC). [Check this out to learn how to create your own .NET Bicep extension](https://techcommunity.microsoft.com/blog/azuregovernanceandmanagementblog/create-your-own-bicep-local-extension-using-net/4439967)
 
 ## 🚀 Overview
 
@@ -38,7 +38,7 @@ param domainName string = 'example.com'
 param zoneId string
 
 @description('Test value for the TXT record')
-param testValue string = 'hello-world'
+param testValue string = 'hello'
 
 // Create TXT Record in CloudFlare
 resource txtRecord 'DnsRecord' = {
@@ -103,7 +103,8 @@ In the `bicepconfig.json` you refer to the ACR:
     "localDeploy": true
   },
   "extensions": {
-    "cloudflare": "br:<registry-name>.azurecr.io/cloudflare:<version>" // ACR
+      "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.0" // ACR
+    // "CloudFlare": "../bin/cloudflare" // local
   },
   "implicitExtensions": []
 }
