@@ -103,7 +103,7 @@ In the `bicepconfig.json` you refer to the ACR:
     "localDeploy": true
   },
   "extensions": {
-      "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.0" // ACR
+      "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.2" // ACR
     // "CloudFlare": "../bin/cloudflare" // local
   },
   "implicitExtensions": []
@@ -112,7 +112,7 @@ In the `bicepconfig.json` you refer to the ACR:
 
 ### Public ACR
 
-If you want to try it out without effort, then you can use `br:cloudflarebicep.azurecr.io/extensions/cloudflare:1.0.0` as the ACR reference which I have published.
+If you want to try it out without effort, then you can use `br:cloudflarebicep.azurecr.io/extensions/cloudflare:0.1.2` as the ACR reference which I have published.
 
 ### CloudFlare API Setup
 
