@@ -9,7 +9,8 @@ A custom Azure Bicep extension for creating CloudFlare DNS resources through Inf
 
 This project provides a Bicep extension that enables you to create CloudFlare DNS records directly from your Azure Bicep templates.
 
-> **Note:** This is an experimental Bicep feature and is subject to change. Do not use it in production.
+> [!NOTE]
+> This is an experimental Bicep feature and is subject to change. Do not use it in production.
 
 ## ⚡ Current Capabilities
 
