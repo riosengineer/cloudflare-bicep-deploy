@@ -77,4 +77,4 @@ jobs:
         run: |
           [string] $target = "br:cloudflarebicep.azurecr.io/cloudflare:${{ steps.nbgv.outputs.SimpleVersion }}"
           ./Infra/Scripts/Publish-Extension.ps1 -Target $target
-          Write-Host "Published extension \`${target}\`." >> $GITHUB_STEP_SUMMARY
+          Write-Host "Published extension \`${$target}\`." >> $GITHUB_STEP_SUMMARY
