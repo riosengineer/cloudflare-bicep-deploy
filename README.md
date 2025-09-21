@@ -2,7 +2,7 @@
 
 A custom Azure Bicep extension for creating CloudFlare DNS resources through Infrastructure as Code (IaC). [Check this out to learn how to create your own .NET Bicep extension](https://techcommunity.microsoft.com/blog/azuregovernanceandmanagementblog/create-your-own-bicep-local-extension-using-net/4439967)
 
-![bicep-output-screenshot](bicep-sample.png)
+![cloudflare-bicep-ext-feature](cloudflare-bicep-ext.png)
 ![cloudflare-dnsrecords](cloudflare-records.png)
 
 ## 🚀 Overview
