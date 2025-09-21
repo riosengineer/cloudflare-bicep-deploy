@@ -6,6 +6,10 @@ on:
     paths-ignore:
       - 'Sample/**'
       - README.md
+      - '*.png'
+      - '**/*.png'
+      - '.github/CODEOWNERS'
+      - 'CONTRIBUTING.md'
   workflow_dispatch:
 
 permissions:

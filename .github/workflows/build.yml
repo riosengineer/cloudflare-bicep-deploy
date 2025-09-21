@@ -6,8 +6,19 @@ on:
     paths-ignore:
       - 'Sample/**'
       - README.md
+      - '*.png'
+      - '**/*.png'
+      - '.github/CODEOWNERS'
+      - 'CONTRIBUTING.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'Sample/**'
+      - README.md
+      - '*.png'
+      - '**/*.png'
+      - '.github/CODEOWNERS'
+      - 'CONTRIBUTING.md'
   workflow_dispatch:
 
 jobs:
