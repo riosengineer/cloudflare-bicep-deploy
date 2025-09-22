@@ -81,7 +81,7 @@ public class CloudFlareDnsRecordIdentifiers
 }
 
 // CloudFlare DNS Record Resource
-[BicepDocHeading("Zone", "Manages a Cloudflare DNS Record")]
+[BicepDocHeading("DnsRecord", "Manages a Cloudflare DNS Record")]
 [BicepDocExample(
     "Creating a basic DNS record",
     "This example shows how to create a DNS record in Cloudflare using Bicep.",

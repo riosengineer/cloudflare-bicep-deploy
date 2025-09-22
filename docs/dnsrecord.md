@@ -1,4 +1,4 @@
-﻿# Zone
+﻿# DnsRecord
 
 Manages a Cloudflare DNS Record
 
