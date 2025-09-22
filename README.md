@@ -28,6 +28,16 @@ See the [Sample](Sample/) folder for an example Bicep template.
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [Bicep CLI](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/install)
+- 
+### CloudFlare API Setup
+
+You will need to create a CloudFlare API token from the [CloudFlare API Tokens page](https://dash.cloudflare.com/profile/api-tokens).
+
+- Create Custom Token
+- Permissions: Zone - DNS - Edit
+- Zone Resources: Include - Specific Zone - Your Domain
+- Save and make a note of the API Token
+- Make this an enviornment variable `CLOUDFLARE_API_TOKEN` locally (`$env:CLOUDFLARE_API_TOKEN = "here"`), or as a GitHub enviornment secret if running in a pipeline so that `bicep local-deploy` will authenticate successfully.
 
 ## 📋 Bicep Usage Example
 
@@ -117,16 +127,6 @@ In the `bicepconfig.json` you refer to the ACR:
 ### Public ACR
 
 If you want to try it out without effort, then you can use `br:cloudflarebicep.azurecr.io/extensions/cloudflare:0.1.2` as the ACR reference which I have published.
-
-### CloudFlare API Setup
-
-You will need to create a CloudFlare API token from the [CloudFlare API Tokens page](https://dash.cloudflare.com/profile/api-tokens).
-
-- Create Custom Token
-- Permissions: Zone - DNS - Edit
-- Zone Resources: Include - Specific Zone - Your Domain
-- Save and make a note of the API Token
-- Make this an enviornment variable `CLOUDFLARE_API_TOKEN` locally (`$env:CLOUDFLARE_API_TOKEN = "here"`), or as a GitHub enviornment secret if running in a pipeline so that `bicep local-deploy` will authenticate successfully.
 
 ## 🤝 Contributing
 
