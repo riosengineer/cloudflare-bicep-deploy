@@ -11,15 +11,6 @@ param zoneId string
 @description('Test value for the TXT record')
 param testValue string = 'hello'
 
-resource zone 'Zone' = {
-  name: 'zone'
-  plan: 'plan'
-  nameServers: [
-    'ns1.example.com'
-    'ns2.example.com'
-  ]
-}
-
 // Create TXT Record in CloudFlare
 resource txtRecord 'DnsRecord' = {
   name: 'txtRecord'
