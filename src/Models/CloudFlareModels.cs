@@ -37,6 +37,20 @@ public class CloudFlareZoneIdentifiers
 }
 
 // CloudFlare Zone Resource
+[BicepDocHeading("Zone", "Manages a Cloudflare DNS Zone")]
+[BicepDocExample(
+    "Creating a basic DNS zone",
+    "This example shows how to create a DNS zone in Cloudflare using Bicep.",
+    @"resource zone 'Zone' = {
+  name: 'zone'
+  plan: 'plan'
+  nameServers: [
+    'ns1.example.com'
+    'ns2.example.com'
+  ]
+}
+"
+)]
 [ResourceType("Zone")]
 public class CloudFlareZone : CloudFlareZoneIdentifiers
 {
@@ -67,6 +81,21 @@ public class CloudFlareDnsRecordIdentifiers
 }
 
 // CloudFlare DNS Record Resource
+[BicepDocHeading("DnsRecord", "Manages a Cloudflare DNS Record")]
+[BicepDocExample(
+    "Creating a basic DNS record",
+    "This example shows how to create a DNS record in Cloudflare using Bicep.",
+    @"resource cnameRecord 'DnsRecord' = {
+  name: 'cname'
+  zoneName: domainName
+  zoneId: zoneId
+  type: 'CNAME'
+  content: 'test.example.com'
+  ttl: 300
+  proxied: false
+}
+"
+)]
 [ResourceType("DnsRecord")]
 public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
 {
