@@ -1,4 +1,4 @@
-﻿# DnsRecord
+# DnsRecord
 
 Manages a Cloudflare DNS Record
 
@@ -28,10 +28,9 @@ The following arguments are available:
 - `name` - (Required) The DNS record name
 - `type` - (Required) The DNS record type
 - `zoneName` - (Required) The zone name this record belongs to
+- `zoneId` - (Required) The zone ID this record belongs to
 - `priority` - (Optional) Priority for MX/SRV records
 - `proxiable` - (Optional) Whether this record can be proxied
 - `proxied` - (Optional) Whether the record is proxied through CloudFlare
 - `recordId` - (Optional) DNS record ID (output only)
 - `ttl` - (Optional) Time to live for the record
-- `zoneId` - (Optional) The zone ID this record belongs to
-

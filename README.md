@@ -75,6 +75,23 @@ For comprehensive usage examples, please refer to the [`Sample/`](Sample/) direc
 
 Here are the steps to run it either locally or using an ACR.
 
+### Regenerating Documentation
+
+When you modify the C# model classes (in `src/Models/`), you'll need to regenerate the documentation files in the `docs/` directory to reflect any changes to resource properties, examples, or descriptions.
+
+Run the documentation generation script:
+
+```powershell
+./Infra/Scripts/Generate-Docs.ps1
+```
+
+This script will:
+- Read the C# model attributes (`BicepDocHeading`, `BicepDocExample`, `TypeProperty`) from the source code
+- Generate updated markdown files in the `docs/` directory for each resource type
+- Ensure the documentation matches the current resource definitions
+
+> **Note**: Always regenerate documentation after making changes to resource properties, adding new resources, or modifying documentation attributes in the C# models.
+
 ### Local build
 
 Run script `Publish-Extension.ps1` from the folder [Infra/Scripts/](Infra/Scripts) to publish the project and to publish the extension locally for Bicep to use:

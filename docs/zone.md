@@ -1,4 +1,4 @@
-﻿# Zone
+# Zone
 
 Manages a Cloudflare DNS Zone
 
@@ -29,4 +29,3 @@ The following arguments are available:
 - `paused` - (Optional) Whether the zone is paused
 - `status` - (Optional) Zone status
 - `zoneId` - (Optional) Zone ID (output only)
-

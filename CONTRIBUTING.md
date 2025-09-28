@@ -33,10 +33,34 @@ To add a new CloudFlare resource type:
 1. **Create a model class** in the `src/Models/` directory following the pattern of existing models
 2. **Implement a handler** in the `src/Handlers/` directory extending `TypedResourceHandler`
 3. **Register the handler** in `src/Program.cs` using `.WithResourceHandler<YourHandler>()`
-4. **Test your changes** locally by running `bicep local-deploy` in the Sample directory
-5. **Open a PR** for review
+4. **Regenerate documentation** by running `./Infra/Scripts/Generate-Docs.ps1` to update the docs
+5. **Test your changes** locally by running `bicep local-deploy` in the Sample directory
+6. **Open a PR** for review
 
 > **Note**: The structure follows CloudFlare's REST API patterns. Refer to the [CloudFlare API documentation](https://developers.cloudflare.com/api/) for resource specifications.
+
+## Updating Documentation
+
+When you make changes to existing resource models:
+
+1. **Modify the C# model classes** in `src/Models/` with updated attributes:
+   - `[BicepDocHeading("Title", "Description")]` - Sets the resource title and description
+   - `[BicepDocExample("Title", "Description", @"bicep code")]` - Adds usage examples
+   - `[TypeProperty("Description", ObjectTypePropertyFlags.Required)]` - Defines properties
+
+2. **Regenerate documentation** by running:
+   ```powershell
+   ./Infra/Scripts/Generate-Docs.ps1
+   ```
+
+3. **Review the generated files** in the `docs/` directory to ensure they're correct
+
+4. **Commit both the model changes and the updated documentation** together
+
+The documentation generation script will automatically:
+- Extract resource titles, descriptions, and examples from the C# attributes
+- Generate property documentation with correct Required/Optional labels
+- Create properly formatted markdown files for each resource type
 
 ## Code Conventions
 
