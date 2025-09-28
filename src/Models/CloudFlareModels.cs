@@ -120,6 +120,6 @@ public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
     [TypeProperty("Whether this record can be proxied")]
     public bool Proxiable { get; set; } = false;
 
-    [TypeProperty("The zone ID this record belongs to")]
-    public string? ZoneId { get; set; }
+    [TypeProperty("The zone ID this record belongs to", ObjectTypePropertyFlags.Required)]
+    public required string ZoneId { get; set; }
 }
