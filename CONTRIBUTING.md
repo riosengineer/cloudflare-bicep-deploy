@@ -72,7 +72,7 @@ To add a new CloudFlare resource type:
 
 ## Updating Documentation
 
-The `src/docs/` folder contains auto-generated documentation for the Bicep extension resources. When you add new resource types or modify existing ones, you should regenerate the documentation.
+The `docs/` folder contains auto-generated documentation for the Bicep extension resources. When you add new resource types or modify existing ones, you should regenerate the documentation.
 
 ### Installing the Documentation Generator
 
@@ -98,7 +98,7 @@ To update the documentation after making changes to resource models:
    bicep-local-docgen generate --force
    ```
 
-3. **Review the generated files** in the `src/docs/` directory to ensure they reflect your changes
+3. **Review the generated files** in the `docs/` directory to ensure they reflect your changes
 
 4. **Commit the updated documentation** along with your code changes
 
