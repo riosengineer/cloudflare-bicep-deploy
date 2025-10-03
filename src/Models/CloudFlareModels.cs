@@ -63,7 +63,7 @@ public class CloudFlareZone : CloudFlareZoneIdentifiers
     [TypeProperty("Zone status")]
     public string Status { get; set; } = ZoneStatus.Pending;
 
-    [TypeProperty("Zone ID (output only)", ObjectTypePropertyFlags.Required)]
+    [TypeProperty("Zone ID (output only)")]
     public string? ZoneId { get; set; }
 
     [TypeProperty("Name servers assigned to the zone")]
