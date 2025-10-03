@@ -80,5 +80,5 @@ jobs:
         shell: pwsh
         run: |
           [string] $target = "br:cloudflarebicep.azurecr.io/cloudflare:${{ steps.nbgv.outputs.SimpleVersion }}"
-          ./Infra/scripts/Publish-Extension.ps1 -Target $target
+          ./Infra/Scripts/Publish-Extension.ps1 -Target $target
           Write-Host "Published extension \`${$target}\`." >> $GITHUB_STEP_SUMMARY
