@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'sample/**'
+      - 'Sample/**'
       - README.md
       - '*.png'
       - '**/*.png'
