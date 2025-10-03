@@ -64,4 +64,4 @@ jobs:
       - name: Publish Extension
         shell: pwsh
         run: |
-          ./Infra/scripts/Publish-Extension.ps1 -Target cloudflare-extension
+          ./Infra/Scripts/Publish-Extension.ps1 -Target cloudflare-extension
