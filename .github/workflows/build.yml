@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'sample/**'
+      - 'Sample/**'
       - README.md
       - '*.png'
       - '**/*.png'
@@ -13,7 +13,7 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'sample/**'
+      - 'Sample/**'
       - README.md
       - '*.png'
       - '**/*.png'
