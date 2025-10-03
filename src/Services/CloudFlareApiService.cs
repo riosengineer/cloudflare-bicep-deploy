@@ -56,7 +56,6 @@ public class CloudFlareApiService : IDisposable
             throw new InvalidOperationException($"CloudFlare API error: {string.Join(", ", result?.Errors?.Select(e => e.Message) ?? ["Unknown error"])}");
         }
 
-        // Map API response back to our model
         zone.ZoneId = result.Result.Id;
         zone.Status = result.Result.Status;
         zone.NameServers = result.Result.NameServers;
@@ -89,7 +88,7 @@ public class CloudFlareApiService : IDisposable
             Name = apiZone.Name,
             ZoneId = apiZone.Id,
             Status = apiZone.Status,
-            Plan = "free", // You might want to map this properly
+            Plan = "free",
             NameServers = apiZone.NameServers,
             Paused = apiZone.Paused
         };
@@ -114,6 +113,12 @@ public class CloudFlareApiService : IDisposable
         if (record.Type == "MX" || record.Type == "SRV")
         {
             requestData.Add("priority", record.Priority);
+        }
+
+        // Add comment if provided
+        if (!string.IsNullOrEmpty(record.Comment))
+        {
+            requestData.Add("comment", record.Comment);
         }
 
         var json = JsonSerializer.Serialize(requestData, new JsonSerializerOptions
@@ -150,6 +155,12 @@ public class CloudFlareApiService : IDisposable
         record.RecordId = result.Result.Id;
         record.ZoneId = zoneId;
         record.Proxiable = result.Result.Proxiable;
+        
+        // Map comment back if it was returned
+        if (!string.IsNullOrEmpty(result.Result.Comment))
+        {
+            record.Comment = result.Result.Comment;
+        }
         
         return record;
     }
@@ -193,4 +204,5 @@ public class CloudFlareDnsRecordApiResult
     public bool Proxied { get; set; }
     public bool Proxiable { get; set; }
     public int Priority { get; set; }
+    public string? Comment { get; set; }
 }

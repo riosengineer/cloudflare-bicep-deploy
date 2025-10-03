@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'Sample/**'
+      - 'sample/**'
       - README.md
       - '*.png'
       - '**/*.png'
@@ -13,7 +13,7 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'Sample/**'
+      - 'sample/**'
       - README.md
       - '*.png'
       - '**/*.png'
@@ -64,4 +64,4 @@ jobs:
       - name: Publish Extension
         shell: pwsh
         run: |
-          ./Infra/Scripts/Publish-Extension.ps1 -Target cloudflare-extension
+          ./infra/scripts/Publish-Extension.ps1 -Target cloudflare-extension
