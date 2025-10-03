@@ -63,12 +63,46 @@ To add a new CloudFlare resource type:
    ```json
    {
      "extensions": {
-       "CloudFlare": "br:youracr.azurecr.io/cloudflare:test"
+       "CloudFlare": "br:youracr.azurecr.io/cloudflare:0.1.0" // example
      }
    }
    ```
 
 3. **Environment Setup**: Ensure you have `CLOUDFLARE_API_TOKEN` configured for testing
+
+## Updating Documentation
+
+The `src/docs/` folder contains auto-generated documentation for the Bicep extension resources. When you add new resource types or modify existing ones, you should regenerate the documentation.
+
+### Installing the Documentation Generator
+
+First, install the `bicep-local-docgen` tool globally:
+
+```bash
+dotnet tool install bicep-local-docgen -g
+```
+
+### Generating Documentation
+
+To update the documentation after making changes to resource models:
+
+1. **Navigate to the src directory**:
+
+   ```bash
+   cd src
+   ```
+
+2. **Run the documentation generator**:
+
+   ```bash
+   bicep-local-docgen generate --force
+   ```
+
+3. **Review the generated files** in the `src/docs/` directory to ensure they reflect your changes
+
+4. **Commit the updated documentation** along with your code changes
+
+> **Note**: The documentation generator reads the `BicepDocHeading`, `BicepDocExample`, and `TypeProperty` attributes from your model classes to create comprehensive documentation for each resource type.
 
 ## Additional Links
 

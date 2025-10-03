@@ -93,6 +93,7 @@ public class CloudFlareDnsRecordIdentifiers
   content: 'test.example.com'
   ttl: 300
   proxied: false
+  comment: 'DNS record created via Bicep'
 }
 "
 )]
@@ -119,6 +120,9 @@ public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
 
     [TypeProperty("Whether this record can be proxied")]
     public bool Proxiable { get; set; } = false;
+
+    [TypeProperty("A comment describing the DNS record")]
+    public string? Comment { get; set; }
 
     [TypeProperty("The zone ID this record belongs to", ObjectTypePropertyFlags.Required)]
     public required string ZoneId { get; set; }
