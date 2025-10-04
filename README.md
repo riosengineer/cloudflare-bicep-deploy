@@ -28,7 +28,7 @@ See the [Sample](Sample/) folder for an example Bicep template.
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [Bicep CLI](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/install)
-- 
+
 ### CloudFlare API Setup
 
 You will need to create a CloudFlare API token from the [CloudFlare API Tokens page](https://dash.cloudflare.com/profile/api-tokens).
