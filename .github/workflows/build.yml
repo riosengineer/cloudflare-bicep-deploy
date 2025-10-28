@@ -65,4 +65,5 @@ jobs:
         shell: pwsh
         run: |
           $env:BICEP_TRACING_ENABLED = "true"
+          winget install -e --id Microsoft.Bicep
           ./Infra/Scripts/Publish-Extension.ps1 -Target cloudflare-extension
