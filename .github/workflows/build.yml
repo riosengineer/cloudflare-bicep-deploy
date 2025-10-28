@@ -67,5 +67,4 @@ jobs:
           $env:BICEP_TRACING_ENABLED = "true"
           az config set bicep.use_binary_from_path=false
           az bicep install
-          bicep --version
           ./Infra/Scripts/Publish-Extension.ps1 -Target cloudflare-extension
