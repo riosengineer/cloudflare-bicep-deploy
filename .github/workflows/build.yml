@@ -45,7 +45,7 @@ jobs:
 
   publish-local:
     name: Publish Locally
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -64,4 +64,5 @@ jobs:
       - name: Publish Extension
         shell: pwsh
         run: |
+          $env:BICEP_TRACING_ENABLED = "true"
           ./Infra/Scripts/Publish-Extension.ps1 -Target cloudflare-extension
