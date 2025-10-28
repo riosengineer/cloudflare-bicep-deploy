@@ -83,7 +83,7 @@ Run script `Publish-Extension.ps1` from the folder [Infra/Scripts/](Infra/Script
 ./Infra/Scripts/Publish-Extension.ps1 -Target ./cloudflare-extension
 ```
 
-This creates the binary that contains the CloudFlare API calls. Prepare your `bicepconfig.json` to refer to the binary. Set `experimentalFeaturesEnabled` -> `localDeploy` to `true` and refer the extension `cloudflare` to the binary:
+This creates the binary that contains the CloudFlare API calls. Prepare your `bicepconfig.json` to refer to the binary. Set `experimentalFeaturesEnabled` -> `localDeploy` to `true` and refer to the extension `cloudflare` to the binary:
 
 ```json
 {
