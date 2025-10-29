@@ -49,7 +49,7 @@ jobs:
   publish-extension:
     needs: deploy-acr
     name: Publish CloudFlare Bicep extension
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,6 +79,7 @@ jobs:
       - name: Publish Extension
         shell: pwsh
         run: |
+          $env:BICEP_TRACING_ENABLED = "true"
           [string] $target = "br:cloudflarebicep.azurecr.io/cloudflare:${{ steps.nbgv.outputs.SimpleVersion }}"
           ./Infra/Scripts/Publish-Extension.ps1 -Target $target
           Write-Host "Published extension \`${$target}\`." >> $GITHUB_STEP_SUMMARY
