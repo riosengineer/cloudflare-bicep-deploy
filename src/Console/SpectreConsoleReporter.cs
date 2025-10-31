@@ -136,7 +136,7 @@ internal static class SpectreConsoleReporter
             table.AddRow("Name Servers", string.Join(", ", zone.NameServers));
         }
 
-    Ansi.Write(table);
+        Ansi.Write(table);
     }
 
     private static Table CreateSummaryTable(string title)
