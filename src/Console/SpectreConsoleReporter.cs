@@ -91,7 +91,7 @@ internal static class SpectreConsoleReporter
             return;
         }
 
-    Ansi.MarkupLine($"[yellow]⚠ {Markup.Escape(message)}[/]");
+        Ansi.MarkupLine($"[yellow]⚠ {Markup.Escape(message)}[/]");
     }
 
     internal static void RenderDnsRecordSummary(CloudFlareDnsRecord record)
