@@ -7,25 +7,26 @@ extension CloudFlare
 @maxLength(32)
 param zoneId string
 
-@description('Firewall expression to evaluate.')
-param firewallExpression string
+@description('Security rule expression to evaluate.')
+param securityRuleExpression string
+// Example: '(ip.src.country eq "CN")'
 
-@description('Whether the firewall rule is enabled.')
+@description('Whether the security rule is enabled.')
 param enabled bool = true
 
-// Block low scoring traffic from China using CloudFlare free plan security rules
-resource blockLowScoreTraffic 'FirewallRule' = {
-  name: 'blockLowScoreTraffic'
+// Block traffic from country using CloudFlare free plan security rules
+resource blockCountryTraffic 'SecurityRule' = {
+  name: 'blockCountryTraffic'
   zoneId: zoneId
   description: 'Block requests originating from specified country'
-  expression: firewallExpression
+  expression: securityRuleExpression
   action: 'block'
   enabled: enabled
 }
 
 // Outputs
-output firewallRuleName string = blockLowScoreTraffic.name
-output firewallRuleAction string = blockLowScoreTraffic.action
-output firewallRuleExpression string = blockLowScoreTraffic.expression
-output firewallRuleEnabled bool = blockLowScoreTraffic.enabled
-output firewallRuleId string = blockLowScoreTraffic.ruleId
+output securityRuleName string = blockCountryTraffic.name
+output securityRuleAction string = blockCountryTraffic.action
+output securityRuleExpression string = blockCountryTraffic.expression
+output securityRuleEnabled bool = blockCountryTraffic.enabled
+output securityRuleId string = blockCountryTraffic.ruleId

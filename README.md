@@ -7,7 +7,7 @@ A custom Azure Bicep extension for creating CloudFlare DNS resources through Inf
 
 ## 🚀 Overview
 
-This project provides a Bicep extension that enables you to create CloudFlare DNS records and security rules (firewall rules) directly from your Azure Bicep templates.
+This project provides a Bicep extension that enables you to create CloudFlare DNS records and security rules directly from your Azure Bicep templates.
 
 > [!NOTE]
 > This is an experimental Bicep feature and is subject to change. Do not use it in production.
@@ -19,7 +19,8 @@ Experimental / sample only. Limited functionality to:
 - Create CloudFlare DNS Records (A, AAAA, CNAME, MX, TXT, SRV, PTR, NS, CAA)
 - Manage DNS record properties (content, TTL, proxied status)
 - Support for multiple CloudFlare zones
-- Apply CloudFlare Security Rules (Firewall Rules API)
+- Apply CloudFlare Security Rules (Security Rules API)
+- Idempotent updates when running `bicep local-deploy` multiple times (DNS records and security rules are updated in place)
 - Free Plan only currently
 
 See [`Sample/dns.bicep`](Sample/dns.bicep) and [`Sample/security-rule.bicep`](Sample/security-rule.bicep) for reference templates.
@@ -38,7 +39,7 @@ You will need to create a CloudFlare API token from the [CloudFlare API Tokens p
 - Create Custom Token
 - Permissions:
   - Zone - DNS - Edit (DNS records)
-  - Zone - Firewall Services - Edit (firewall rules)
+  - Zone - Firewall Services - Edit (security rules)
 - Zone Resources: Include - Specific Zone - Your Domain
 - Save and make a note of the API Token
 - Make this an enviornment variable `CLOUDFLARE_API_TOKEN` locally (`$env:CLOUDFLARE_API_TOKEN = "here"`), or as a GitHub enviornment secret if running in a pipeline so that `bicep local-deploy` will authenticate successfully.
@@ -65,22 +66,23 @@ resource txtRecord 'DnsRecord' = {
 ```
 
 ```bicep
-// Security rule (firewall rule) sample
-resource blockLowScoreTraffic 'FirewallRule' = {
-  name: 'blockLowScoreTraffic'
+// Security rule sample
+resource blockCountryTraffic 'SecurityRule' = {
+  name: 'blockCountryTraffic'
   zoneId: zoneId
   description: 'Block traffic from CN'
-  expression: 'ip.src.country eq "CN"'
+  expression: '(ip.src.country eq "CN")'
   action: 'block'
   enabled: true
 }
 
 output recordName string = txtRecord.name
-output firewallRuleId string = blockLowScoreTraffic.ruleId
+output securityRuleId string = blockCountryTraffic.ruleId
+...
 ```
 
 > [!NOTE]
-> The `FirewallRule` resource maps to the Cloudflare [Security Rules (Firewall Rules)](https://developers.cloudflare.com/security/rules/) API and supports the free plan feature set.
+> The `SecurityRule` resource maps to the Cloudflare [Security Rules](https://developers.cloudflare.com/security/rules/) API and supports the free plan feature set.
 
 For comprehensive usage examples, please refer to the [`Sample/`](Sample/) directory in this repository.
 
@@ -110,7 +112,7 @@ This creates the binary that contains the CloudFlare API calls. Prepare your `bi
 }
 ```
 
-Run `bicep local-deploy Sample/dns.bicep --parameters zoneId='<your-zone-id>'` or `bicep local-deploy Sample/security-rule.bicep --parameters zoneId='<your-zone-id>' firewallExpression='ip.src.country eq "CN"'` to test the extension locally. Also, see the examples in the [Sample](Sample/) folder.
+Run `bicep local-deploy Sample/dns.bicep --parameters zoneId='<your-zone-id>'` or `bicep local-deploy Sample/security-rule.bicep --parameters zoneId='<your-zone-id>' securityRuleExpression='(ip.src.country eq "CN")'` to test the extension locally. Also, see the examples in the [Sample](Sample/) folder.
 
 ### Azure Container Registry build
 

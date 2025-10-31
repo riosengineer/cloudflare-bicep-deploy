@@ -16,7 +16,7 @@ builder.Services
         configurationType: typeof(Configuration))
     .WithResourceHandler<CloudFlareZoneHandler>()
     .WithResourceHandler<CloudFlareDnsRecordHandler>()
-    .WithResourceHandler<CloudFlareFirewallRuleHandler>();
+    .WithResourceHandler<CloudFlareSecurityRuleHandler>();
 
 var app = builder.Build();
 

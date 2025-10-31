@@ -25,7 +25,19 @@ public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsReco
                 throw new InvalidOperationException($"ZoneId is required for DNS record '{request.Properties.Name}'. Please provide the CloudFlare Zone ID in your Bicep template.");
             }
 
-            var createdRecord = await apiService.CreateDnsRecordAsync(request.Properties, request.Properties.ZoneId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(request.Properties.RecordId))
+            {
+                var existingRecord = await apiService.FindDnsRecordAsync(
+                    request.Properties,
+                    cancellationToken);
+
+                if (existingRecord is not null)
+                {
+                    request.Properties.RecordId = existingRecord.Id;
+                }
+            }
+
+            var createdRecord = await apiService.UpsertDnsRecordAsync(request.Properties, cancellationToken);
             
             // Update properties with the created record data
             request.Properties.RecordId = createdRecord.RecordId;
