@@ -37,7 +37,6 @@ internal static class SpectreConsoleReporter
 
         var escapedDescription = Markup.Escape(description);
         T? result = default;
-        Exception? failure = null;
 
         await Ansi.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn(), new ProgressBarColumn(), new PercentageColumn())
@@ -49,17 +48,12 @@ internal static class SpectreConsoleReporter
                     result = await operation(cancellationToken);
                     task.Value = task.MaxValue;
                 }
-                catch (Exception ex)
+                catch
                 {
-                    failure = ex;
                     task.StopTask();
+                    throw;
                 }
             });
-
-        if (failure is not null)
-        {
-            throw failure;
-        }
 
         return result!;
     }
