@@ -71,7 +71,7 @@ internal static class SpectreConsoleReporter
             return;
         }
 
-    Ansi.MarkupLine($"[cyan]{Markup.Escape(message)}[/]");
+        Ansi.MarkupLine($"[cyan]{Markup.Escape(message)}[/]");
     }
 
     internal static void WriteSuccess(string message)
