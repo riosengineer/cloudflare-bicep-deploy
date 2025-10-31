@@ -81,7 +81,7 @@ internal static class SpectreConsoleReporter
             return;
         }
 
-    Ansi.MarkupLine($"[green]✔ {Markup.Escape(message)}[/]");
+        Ansi.MarkupLine($"[green]✔ {Markup.Escape(message)}[/]");
     }
 
     internal static void WriteWarning(string message)
