@@ -115,7 +115,7 @@ internal static class SpectreConsoleReporter
             table.AddRow("Comment", record.Comment!);
         }
 
-    Ansi.Write(table);
+        Ansi.Write(table);
     }
 
     internal static void RenderZoneSummary(CloudFlareZone zone, bool existedPrior)
