@@ -20,7 +20,7 @@ resource txtRecord 'DnsRecord' = {
   content: testValue
   ttl: 300
   proxied: false
-  comment: 'TXT record for domain verification'
+  comment: 'Bicep Community Call!'
 }
 
 // Create A Record pointing to an IP
@@ -32,7 +32,7 @@ resource aRecord 'DnsRecord' = {
   content: '192.168.1.101'
   ttl: 300
   proxied: false
-  comment: 'A record for primary server'
+  comment: 'Bicep Community Call!'
 }
 
 // Create CNAME Record pointing to another domain
@@ -44,7 +44,7 @@ resource cnameRecord 'DnsRecord' = {
   content: 'test.example.com'
   ttl: 300
   proxied: false
-  comment: 'CNAME record for aliasing'
+  comment: 'Bicep Community Call!'
 }
 
 // Create AAAA Record (IPv6)
@@ -56,7 +56,7 @@ resource aaaaRecord 'DnsRecord' = {
   content: '2001:db8::2'
   ttl: 300
   proxied: false
-  comment: 'AAAA record for IPv6 address'
+  comment: 'Bicep Community Call!'
 }
 
 // Create MX Record for mail
@@ -69,7 +69,7 @@ resource mxRecord 'DnsRecord' = {
   priority: 20
   ttl: 300
   proxied: false
-  comment: 'Mail exchange record for mail routing'
+  comment: 'Bicep Community Call!'
 }
 
 // Outputs

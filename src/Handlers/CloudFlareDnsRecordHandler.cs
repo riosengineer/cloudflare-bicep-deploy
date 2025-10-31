@@ -1,4 +1,5 @@
 using Bicep.Local.Extension.Host.Handlers;
+using CloudFlareExtension.ConsoleOutput;
 using CloudFlareExtension.Models;
 using CloudFlareExtension.Services;
 
@@ -25,13 +26,23 @@ public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsReco
                 throw new InvalidOperationException($"ZoneId is required for DNS record '{request.Properties.Name}'. Please provide the CloudFlare Zone ID in your Bicep template.");
             }
 
-            // Create the DNS record
-            var createdRecord = await apiService.CreateDnsRecordAsync(request.Properties, request.Properties.ZoneId, cancellationToken);
+            SpectreConsoleReporter.WriteInfo(
+                $"Applying DNS record '{request.Properties.Name}' ({request.Properties.Type}) in zone '{request.Properties.ZoneName}'.");
+
+            // Create the DNS record (with interactive progress when available)
+            var createdRecord = await SpectreConsoleReporter.RunOperationAsync(
+                $"Cloudflare DNS API -> {request.Properties.Type} {request.Properties.Name}",
+                ct => apiService.CreateDnsRecordAsync(request.Properties, request.Properties.ZoneId, ct),
+                cancellationToken);
             
             // Update properties with the created record data
             request.Properties.RecordId = createdRecord.RecordId;
             request.Properties.ZoneId = createdRecord.ZoneId;
             request.Properties.Proxiable = createdRecord.Proxiable;
+
+            SpectreConsoleReporter.WriteSuccess(
+                $"DNS record '{request.Properties.Name}' ({request.Properties.Type}) synced successfully.");
+            SpectreConsoleReporter.RenderDnsRecordSummary(request.Properties);
 
             return GetResponse(request);
         }
