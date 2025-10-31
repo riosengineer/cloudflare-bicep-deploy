@@ -5,6 +5,5 @@
   "extensions": {
     // "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.9" // ACR
     "CloudFlare": "../bin/cloudflare" // local
-  },
-  "implicitExtensions": []
+  }
 }

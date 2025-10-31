@@ -15,7 +15,8 @@ builder.Services
         typeAssembly: typeof(Program).Assembly,
         configurationType: typeof(Configuration))
     .WithResourceHandler<CloudFlareZoneHandler>()
-    .WithResourceHandler<CloudFlareDnsRecordHandler>();
+    .WithResourceHandler<CloudFlareDnsRecordHandler>()
+    .WithResourceHandler<CloudFlareFirewallRuleHandler>();
 
 var app = builder.Build();
 
