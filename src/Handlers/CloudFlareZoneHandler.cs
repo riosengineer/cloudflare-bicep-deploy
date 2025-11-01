@@ -1,5 +1,4 @@
 using Bicep.Local.Extension.Host.Handlers;
-using CloudFlareExtension.ConsoleOutput;
 using CloudFlareExtension.Models;
 using CloudFlareExtension.Services;
 
@@ -20,8 +19,6 @@ public class CloudFlareZoneHandler : TypedResourceHandler<CloudFlareZone, CloudF
             var config = Configuration.GetConfiguration();
             using var apiService = new CloudFlareApiService(config);
 
-            SpectreConsoleReporter.WriteInfo($"Ensuring CloudFlare zone '{request.Properties.Name}' exists.");
-
             // Check if zone already exists
             var existingZone = await apiService.GetZoneAsync(request.Properties.Name, cancellationToken);
             
@@ -33,24 +30,17 @@ public class CloudFlareZoneHandler : TypedResourceHandler<CloudFlareZone, CloudF
                 request.Properties.NameServers = existingZone.NameServers;
                 request.Properties.Paused = existingZone.Paused;
 
-                SpectreConsoleReporter.WriteWarning($"Zone '{request.Properties.Name}' already exists. Skipping creation.");
-                SpectreConsoleReporter.RenderZoneSummary(request.Properties, existedPrior: true);
             }
             else
             {
                 // Create new zone
-                var createdZone = await SpectreConsoleReporter.RunOperationAsync(
-                    $"Create CloudFlare zone '{request.Properties.Name}'",
-                    ct => apiService.CreateZoneAsync(request.Properties, ct),
-                    cancellationToken);
+                var createdZone = await apiService.CreateZoneAsync(request.Properties, cancellationToken);
                 
                 // Update properties with the created zone data
                 request.Properties.ZoneId = createdZone.ZoneId;
                 request.Properties.Status = createdZone.Status;
                 request.Properties.NameServers = createdZone.NameServers;
 
-                SpectreConsoleReporter.WriteSuccess($"Created CloudFlare zone '{request.Properties.Name}'.");
-                SpectreConsoleReporter.RenderZoneSummary(request.Properties, existedPrior: false);
             }
 
             return GetResponse(request);

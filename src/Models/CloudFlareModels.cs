@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
@@ -126,4 +127,77 @@ public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
 
     [TypeProperty("The zone ID this record belongs to", ObjectTypePropertyFlags.Required)]
     public required string ZoneId { get; set; }
+}
+
+
+public static class CloudFlareSecurityRuleActions
+{
+    private static readonly Dictionary<string, string> NormalizedActions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["allow"] = "allow",
+        ["block"] = "block",
+        ["challenge"] = "challenge",
+        ["js_challenge"] = "js_challenge",
+        ["managed_challenge"] = "managed_challenge",
+        ["log"] = "log"
+    };
+
+    public static bool TryNormalize(string action, out string normalizedAction)
+    {
+        if (NormalizedActions.TryGetValue(action, out var normalized))
+        {
+            normalizedAction = normalized;
+            return true;
+        }
+
+        normalizedAction = string.Empty;
+        return false;
+    }
+
+    public static IEnumerable<string> SupportedActions => NormalizedActions.Keys;
+}
+
+public class CloudFlareSecurityRuleIdentifiers
+{
+    [TypeProperty("The logical name of the security rule", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
+    public required string Name { get; set; }
+
+    [TypeProperty("The zone ID this security rule applies to", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
+    public required string ZoneId { get; set; }
+}
+
+[BicepDocHeading("SecurityRule", "Manages a Cloudflare Security Rule")]
+[BicepDocExample(
+        "Block traffic from China",
+        "Creates a security rule that blocks requests originating from China using the free-plan API.",
+        @"resource blockChinaTraffic 'SecurityRule' = {
+    name: 'blockChinaTraffic'
+    zoneId: zoneId
+    description: 'Block requests from CN'
+    expression: '(ip.src.country eq ""CN"")'
+    action: 'block'
+    enabled: true
+}
+"
+)]
+[ResourceType("SecurityRule")]
+public class CloudFlareSecurityRule : CloudFlareSecurityRuleIdentifiers
+{
+    [TypeProperty("Human friendly description shown in the Cloudflare dashboard")]
+    public string? Description { get; set; }
+
+    [TypeProperty("Whether the rule is enabled (set to false to pause the rule)")]
+    public bool Enabled { get; set; } = true;
+
+    [TypeProperty("Security rule expression that defines matching traffic", ObjectTypePropertyFlags.Required)]
+    public required string Expression { get; set; }
+
+    [TypeProperty("Action applied to matching requests (allow, block, challenge, js_challenge, managed_challenge, log)", ObjectTypePropertyFlags.Required)]
+    public required string Action { get; set; }
+
+    [TypeProperty("Cloudflare security rule ID (output only)")]
+    public string? RuleId { get; set; }
+
+    [TypeProperty("Cloudflare filter ID associated with this security rule (output only)")]
+    public string? FilterId { get; set; }
 }
