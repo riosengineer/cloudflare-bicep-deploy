@@ -23,6 +23,15 @@ public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecu
                 request.Properties.Description = request.Properties.Name;
             }
 
+            if (string.IsNullOrWhiteSpace(request.Properties.Reference))
+            {
+                request.Properties.Reference = request.Properties.Name.Trim();
+            }
+            else
+            {
+                request.Properties.Reference = request.Properties.Reference.Trim();
+            }
+
             var config = Configuration.GetConfiguration();
             using var apiService = new CloudFlareApiService(config);
 
@@ -35,6 +44,10 @@ public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecu
                     if (string.IsNullOrWhiteSpace(request.Properties.FilterId) && existingRule.Filter is not null)
                     {
                         request.Properties.FilterId = existingRule.Filter.Id;
+                    }
+                    if (!string.IsNullOrWhiteSpace(existingRule.Ref))
+                    {
+                        request.Properties.Reference = existingRule.Ref;
                     }
                 }
             }
@@ -55,6 +68,7 @@ public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecu
             request.Properties.Action = updatedRule.Action;
             request.Properties.Enabled = updatedRule.Enabled;
             request.Properties.Description = updatedRule.Description;
+            request.Properties.Reference = updatedRule.Reference;
 
             return GetResponse(request);
         }

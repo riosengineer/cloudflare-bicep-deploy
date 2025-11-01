@@ -37,6 +37,16 @@ public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsReco
                 }
             }
 
+            var normalizedInputZone = request.Properties.ZoneName?.Trim().TrimEnd('.') ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(request.Properties.ZoneId))
+            {
+                var zone = await apiService.GetZoneAsync(normalizedInputZone, cancellationToken);
+                if (zone is not null && !string.Equals(zone.Name, normalizedInputZone, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException($"Zone name '{request.Properties.ZoneName}' does not match the CloudFlare zone '{zone.Name}' (ID {request.Properties.ZoneId}).");
+                }
+            }
+
             var createdRecord = await apiService.UpsertDnsRecordAsync(request.Properties, cancellationToken);
             
             // Update properties with the created record data

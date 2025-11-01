@@ -74,6 +74,7 @@ resource blockCountryTraffic 'SecurityRule' = {
   expression: '(ip.src.country eq "CN")'
   action: 'block'
   enabled: true
+  reference: 'block-country-cn' // Unique ref 
 }
 
 output recordName string = txtRecord.name
@@ -83,6 +84,7 @@ output securityRuleId string = blockCountryTraffic.ruleId
 
 > [!NOTE]
 > The `SecurityRule` resource maps to the Cloudflare [Security Rules](https://developers.cloudflare.com/security/rules/) API and supports the free plan feature set.
+> Specify the optional `reference` property when you need a custom Cloudflare identifier; the extension otherwise defaults it to the resource name on first deploy.
 
 For comprehensive usage examples, please refer to the [`Sample/`](Sample/) directory in this repository.
 
