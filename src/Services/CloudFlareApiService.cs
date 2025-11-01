@@ -192,7 +192,11 @@ public class CloudFlareApiService : IDisposable
 
         foreach (var query in GetSecurityRuleLookupQueries(rule))
         {
-            var match = await QuerySingleAsync<CloudFlareSecurityRuleApiResult>($"/zones/{zoneId}/firewall/rules", query, cancellationToken);
+            var match = await QuerySingleAsync<CloudFlareSecurityRuleApiResult>(
+                $"/zones/{zoneId}/firewall/rules",
+                query,
+                cancellationToken,
+                allowClientErrors: true);
             if (match is not null)
             {
                 return match;
@@ -524,12 +528,17 @@ public class CloudFlareApiService : IDisposable
             : zoneName.Trim().TrimEnd('.');
     }
 
-    private async Task<T?> QuerySingleAsync<T>(string basePath, Dictionary<string, string> queryParameters, CancellationToken cancellationToken)
+    private async Task<T?> QuerySingleAsync<T>(string basePath, Dictionary<string, string> queryParameters, CancellationToken cancellationToken, bool allowClientErrors = false)
     {
         var path = BuildPath(basePath, queryParameters);
         var response = await _httpClient.GetAsync(BuildUrl(path), cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return default;
+        }
+
+        if (allowClientErrors && (int)response.StatusCode >= 400 && (int)response.StatusCode < 500 && response.StatusCode != HttpStatusCode.NotFound)
         {
             return default;
         }
