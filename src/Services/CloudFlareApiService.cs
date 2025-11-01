@@ -63,7 +63,7 @@ public class CloudFlareApiService : IDisposable
         var response = await _httpClient.PostAsJsonAsync(BuildUrl("/zones"), request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-    var result = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<CloudFlareZoneApiResult>>(ApiSerializerOptions, cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<CloudFlareZoneApiResult>>(ApiSerializerOptions, cancellationToken);
         
         if (result?.Success != true)
         {
