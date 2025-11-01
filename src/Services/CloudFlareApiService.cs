@@ -89,7 +89,7 @@ public class CloudFlareApiService : IDisposable
             throw new InvalidOperationException($"Failed to get zone '{zoneName}': {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         }
 
-    var result = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<CloudFlareZoneApiResult[]>>(ApiSerializerOptions, cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<CloudFlareZoneApiResult[]>>(ApiSerializerOptions, cancellationToken);
         
         if (result?.Success != true || result.Result?.Length == 0)
         {
