@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Linq;
+using System.Reflection;
 using CloudFlareExtension.Models;
 
 namespace CloudFlareExtension.Services;
@@ -36,6 +37,10 @@ public class CloudFlareApiService : IDisposable
         _httpClient = new HttpClient();
         // Don't set BaseAddress - use full URLs instead
 
+        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("cloudflare-bicep-extension", version));
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("(+https://github.com/riosengineer/cloudflare-bicep-deploy)"));
+
         // Only set the essential Authorization header
         if (!string.IsNullOrEmpty(_config.ApiToken))
         {
@@ -60,19 +65,22 @@ public class CloudFlareApiService : IDisposable
             jump_start = false // You can make this configurable
         };
 
-        var response = await _httpClient.PostAsJsonAsync(BuildUrl("/zones"), request, cancellationToken);
+        const string path = "/zones";
+
+        var response = await SendWithRetryAsync(
+            () => new HttpRequestMessage(HttpMethod.Post, BuildUrl(path))
+            {
+                Content = CreateJsonContent(request)
+            },
+            cancellationToken);
+
         response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<CloudFlareZoneApiResult>>(ApiSerializerOptions, cancellationToken);
-        
-        if (result?.Success != true)
-        {
-            throw new InvalidOperationException($"CloudFlare API error: {string.Join(", ", result?.Errors?.Select(e => e.Message) ?? ["Unknown error"])}");
-        }
+        var apiZone = await DeserializeApiResponseAsync<CloudFlareZoneApiResult>(response, cancellationToken, path);
 
-        zone.ZoneId = result.Result.Id;
-        zone.Status = result.Result.Status;
-        zone.NameServers = result.Result.NameServers;
+        zone.ZoneId = apiZone.Id;
+        zone.Status = apiZone.Status;
+        zone.NameServers = apiZone.NameServers;
         
         return zone;
     }
@@ -82,21 +90,25 @@ public class CloudFlareApiService : IDisposable
     /// </summary>
     public async Task<CloudFlareZone?> GetZoneAsync(string zoneName, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.GetAsync(BuildUrl($"/zones?name={Uri.EscapeDataString(zoneName)}"), cancellationToken);
+        var path = $"/zones?name={Uri.EscapeDataString(zoneName)}";
+
+        var response = await SendWithRetryAsync(
+            () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)),
+            cancellationToken);
         
         if (!response.IsSuccessStatusCode)
         {
             throw new InvalidOperationException($"Failed to get zone '{zoneName}': {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
         }
 
-        var result = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<CloudFlareZoneApiResult[]>>(ApiSerializerOptions, cancellationToken);
+        var zones = await DeserializeApiResponseAsync<CloudFlareZoneApiResult[]>(response, cancellationToken, path);
         
-        if (result?.Success != true || result.Result?.Length == 0)
+        if (zones is null || zones.Length == 0)
         {
             return null;
         }
 
-        var apiZone = result.Result![0];
+        var apiZone = zones[0];
         return new CloudFlareZone
         {
             Name = apiZone.Name,
@@ -125,21 +137,26 @@ public class CloudFlareApiService : IDisposable
 
         if (!string.IsNullOrWhiteSpace(record.RecordId))
         {
+            var path = $"/zones/{record.ZoneId}/dns_records/{record.RecordId}";
             response = await SendJsonAsync(HttpMethod.Put,
-                $"/zones/{record.ZoneId}/dns_records/{record.RecordId}",
+                path,
                 payload,
                 cancellationToken);
+
+            var apiRecord = await DeserializeApiResponseAsync<CloudFlareDnsRecordApiResult>(response, cancellationToken, path);
+            return MapApiDnsRecord(record, apiRecord);
         }
         else
         {
+            var path = $"/zones/{record.ZoneId}/dns_records";
             response = await SendJsonAsync(HttpMethod.Post,
-                $"/zones/{record.ZoneId}/dns_records",
+                path,
                 payload,
                 cancellationToken);
-        }
 
-        var apiRecord = await DeserializeApiResponseAsync<CloudFlareDnsRecordApiResult>(response, cancellationToken);
-        return MapApiDnsRecord(record, apiRecord);
+            var apiRecord = await DeserializeApiResponseAsync<CloudFlareDnsRecordApiResult>(response, cancellationToken, path);
+            return MapApiDnsRecord(record, apiRecord);
+        }
     }
 
     public async Task<CloudFlareDnsRecordApiResult?> FindDnsRecordAsync(CloudFlareDnsRecord record, CancellationToken cancellationToken = default)
@@ -175,7 +192,10 @@ public class CloudFlareApiService : IDisposable
 
         if (!string.IsNullOrWhiteSpace(rule.RuleId))
         {
-            var response = await _httpClient.GetAsync(BuildUrl($"/zones/{zoneId}/firewall/rules/{rule.RuleId}"), cancellationToken);
+            var path = $"/zones/{zoneId}/firewall/rules/{rule.RuleId}";
+            var response = await SendWithRetryAsync(
+                () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)),
+                cancellationToken);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return null;
@@ -187,7 +207,7 @@ public class CloudFlareApiService : IDisposable
                 throw new InvalidOperationException($"CloudFlare API request to '/zones/{zoneId}/firewall/rules/{rule.RuleId}' failed: {response.StatusCode} - {errorText}");
             }
 
-            return await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult>(response, cancellationToken);
+            return await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult>(response, cancellationToken, path);
         }
 
         foreach (var query in GetSecurityRuleLookupQueries(rule))
@@ -209,7 +229,9 @@ public class CloudFlareApiService : IDisposable
         };
 
         var listPath = BuildPath($"/zones/{zoneId}/firewall/rules", listQuery);
-        var listResponse = await _httpClient.GetAsync(BuildUrl(listPath), cancellationToken);
+        var listResponse = await SendWithRetryAsync(
+            () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(listPath)),
+            cancellationToken);
 
         if (!listResponse.IsSuccessStatusCode)
         {
@@ -218,12 +240,14 @@ public class CloudFlareApiService : IDisposable
         }
 
         var rules = await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult[]>(listResponse, cancellationToken);
+        var reference = GetSecurityRuleReference(rule);
 
         return rules.FirstOrDefault(candidate =>
+            (!string.IsNullOrWhiteSpace(reference) && !string.IsNullOrWhiteSpace(candidate.Ref) && string.Equals(candidate.Ref, reference, StringComparison.OrdinalIgnoreCase)) ||
+            (candidate.Filter is not null && !string.IsNullOrWhiteSpace(candidate.Filter.Expression) && string.Equals(candidate.Filter.Expression, rule.Expression, StringComparison.OrdinalIgnoreCase)) ||
             (!string.IsNullOrWhiteSpace(candidate.Description) && string.Equals(candidate.Description, rule.Name, StringComparison.OrdinalIgnoreCase)) ||
             (!string.IsNullOrWhiteSpace(candidate.Description) && string.Equals(candidate.Description, rule.Description, StringComparison.OrdinalIgnoreCase)) ||
-            (candidate.Filter is not null && !string.IsNullOrWhiteSpace(candidate.Filter.Description) && string.Equals(candidate.Filter.Description, rule.Name, StringComparison.OrdinalIgnoreCase)) ||
-            (candidate.Filter is not null && !string.IsNullOrWhiteSpace(candidate.Filter.Expression) && string.Equals(candidate.Filter.Expression, rule.Expression, StringComparison.OrdinalIgnoreCase)));
+            (candidate.Filter is not null && !string.IsNullOrWhiteSpace(candidate.Filter.Description) && string.Equals(candidate.Filter.Description, rule.Name, StringComparison.OrdinalIgnoreCase)));
     }
 
     public async Task<CloudFlareSecurityRule> UpsertSecurityRuleAsync(CloudFlareSecurityRule rule, CancellationToken cancellationToken = default)
@@ -238,23 +262,25 @@ public class CloudFlareApiService : IDisposable
         if (!string.IsNullOrWhiteSpace(rule.RuleId))
         {
             var payload = BuildSecurityRulePayload(rule, includeRef: false);
+            var path = $"/zones/{rule.ZoneId}/firewall/rules/{rule.RuleId}";
             var response = await SendJsonAsync(HttpMethod.Put,
-                $"/zones/{rule.ZoneId}/firewall/rules/{rule.RuleId}",
+                path,
                 payload,
                 cancellationToken);
 
-            var apiRule = await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult>(response, cancellationToken);
+            var apiRule = await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult>(response, cancellationToken, path);
             return MapApiSecurityRule(rule, apiRule);
         }
         else
         {
             var payload = BuildSecurityRulePayload(rule, includeRef: true);
+            var path = $"/zones/{rule.ZoneId}/firewall/rules";
             var response = await SendJsonAsync(HttpMethod.Post,
-                $"/zones/{rule.ZoneId}/firewall/rules",
+                path,
                 new[] { payload },
                 cancellationToken);
 
-            var apiRules = await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult[]>(response, cancellationToken);
+            var apiRules = await DeserializeApiResponseAsync<CloudFlareSecurityRuleApiResult[]>(response, cancellationToken, path);
             if (apiRules.Length == 0)
             {
                 throw new InvalidOperationException("CloudFlare API returned no security rules in the response.");
@@ -293,9 +319,13 @@ public class CloudFlareApiService : IDisposable
             ["filter"] = filter
         };
 
-        if (includeRef && !string.IsNullOrWhiteSpace(rule.Name))
+        if (includeRef)
         {
-            payload["ref"] = rule.Name;
+            var reference = GetSecurityRuleReference(rule);
+            if (!string.IsNullOrWhiteSpace(reference))
+            {
+                payload["ref"] = reference;
+            }
         }
 
         return payload;
@@ -328,12 +358,12 @@ public class CloudFlareApiService : IDisposable
 
     private async Task<HttpResponseMessage> SendJsonAsync(HttpMethod method, string relativePath, object payload, CancellationToken cancellationToken)
     {
-        var request = new HttpRequestMessage(method, BuildUrl(relativePath))
-        {
-            Content = CreateJsonContent(payload)
-        };
-
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => new HttpRequestMessage(method, BuildUrl(relativePath))
+            {
+                Content = CreateJsonContent(payload)
+            },
+            cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -352,9 +382,76 @@ public class CloudFlareApiService : IDisposable
         return content;
     }
 
-    private static async Task<T> DeserializeApiResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> SendWithRetryAsync(Func<HttpRequestMessage> requestFactory, CancellationToken cancellationToken)
     {
-        var apiResponse = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<T>>(ApiSerializerOptions, cancellationToken);
+        const int maxAttempts = 3;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            using var request = requestFactory();
+            HttpResponseMessage response;
+
+            try
+            {
+                response = await _httpClient.SendAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException) when (attempt < maxAttempts)
+            {
+                var delayFromException = CalculateRetryDelay(null, attempt);
+                await Task.Delay(delayFromException, cancellationToken);
+                continue;
+            }
+
+            if (!ShouldRetry(response.StatusCode) || attempt == maxAttempts)
+            {
+                return response;
+            }
+
+            var delay = CalculateRetryDelay(response, attempt);
+            response.Dispose();
+            await Task.Delay(delay, cancellationToken);
+        }
+
+        throw new InvalidOperationException("Retry logic exhausted unexpectedly.");
+    }
+
+    private static bool ShouldRetry(HttpStatusCode statusCode)
+        => statusCode == HttpStatusCode.TooManyRequests || ((int)statusCode >= 500 && (int)statusCode < 600);
+
+    private static TimeSpan CalculateRetryDelay(HttpResponseMessage? response, int attempt)
+    {
+        if (response?.Headers.RetryAfter?.Delta is TimeSpan retryAfterDelta && retryAfterDelta > TimeSpan.Zero)
+        {
+            return retryAfterDelta;
+        }
+
+        if (response?.Headers.RetryAfter?.Date is DateTimeOffset retryAfterDate)
+        {
+            var delay = retryAfterDate - DateTimeOffset.UtcNow;
+            if (delay > TimeSpan.Zero)
+            {
+                return delay;
+            }
+        }
+
+        var baseSeconds = Math.Pow(2, attempt - 1);
+        var cappedSeconds = Math.Min(baseSeconds, 30);
+        return TimeSpan.FromSeconds(cappedSeconds);
+    }
+
+    private static async Task<T> DeserializeApiResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken, string? requestPath = null)
+    {
+        CloudFlareApiResponse<T>? apiResponse;
+        try
+        {
+            apiResponse = await response.Content.ReadFromJsonAsync<CloudFlareApiResponse<T>>(ApiSerializerOptions, cancellationToken);
+        }
+        catch (JsonException jsonEx)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var context = string.IsNullOrWhiteSpace(requestPath) ? string.Empty : $"Request Path: {requestPath}{Environment.NewLine}";
+            throw new JsonException($"Failed to deserialize CloudFlare API response.{Environment.NewLine}{context}Status Code: {response.StatusCode}{Environment.NewLine}Response Body: {body}", jsonEx);
+        }
 
         if (apiResponse is null)
         {
@@ -399,6 +496,10 @@ public class CloudFlareApiService : IDisposable
         rule.RuleId = apiRule.Id;
         rule.Action = apiRule.Action;
         rule.Description = apiRule.Description;
+        if (!string.IsNullOrWhiteSpace(apiRule.Ref))
+        {
+            rule.Reference = apiRule.Ref;
+        }
 
         if (apiRule.Filter is not null)
         {
@@ -446,6 +547,16 @@ public class CloudFlareApiService : IDisposable
         {
             yield return rule.Description.Trim();
         }
+    }
+
+    private static string GetSecurityRuleReference(CloudFlareSecurityRule rule)
+    {
+        if (!string.IsNullOrWhiteSpace(rule.Reference))
+        {
+            return rule.Reference.Trim();
+        }
+
+        return string.IsNullOrWhiteSpace(rule.Name) ? string.Empty : rule.Name.Trim();
     }
 
     private static IEnumerable<string> GetRecordLookupNames(CloudFlareDnsRecord record)
@@ -531,7 +642,9 @@ public class CloudFlareApiService : IDisposable
     private async Task<T?> QuerySingleAsync<T>(string basePath, Dictionary<string, string> queryParameters, CancellationToken cancellationToken, bool allowClientErrors = false)
     {
         var path = BuildPath(basePath, queryParameters);
-        var response = await _httpClient.GetAsync(BuildUrl(path), cancellationToken);
+        var response = await SendWithRetryAsync(
+            () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)),
+            cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -549,7 +662,7 @@ public class CloudFlareApiService : IDisposable
             throw new InvalidOperationException($"CloudFlare API request to '{path}' failed: {response.StatusCode} - {error}");
         }
 
-        var results = await DeserializeApiResponseAsync<T[]>(response, cancellationToken);
+    var results = await DeserializeApiResponseAsync<T[]>(response, cancellationToken, path);
         return results.Length > 0 ? results[0] : default;
     }
 

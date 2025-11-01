@@ -200,4 +200,7 @@ public class CloudFlareSecurityRule : CloudFlareSecurityRuleIdentifiers
 
     [TypeProperty("Cloudflare filter ID associated with this security rule (output only)")]
     public string? FilterId { get; set; }
+
+    [TypeProperty("Optional reference identifier persisted with the rule; defaults to the resource name on create")]
+    public string? Reference { get; set; }
 }

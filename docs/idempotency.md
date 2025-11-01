@@ -9,8 +9,8 @@ The extension keeps repeated `bicep local-deploy` executions safe by reusing exi
 
 ## Security Rules
 
-- On the first deploy a rule is created with a stable `ref` value matching the resource name, so future runs can find it.
-- Each update first attempts a lookup by rule name/description; if that fails, it falls back to downloading a paged rule list for the zone.
+- On the first deploy the rule receives a stable `ref` value (by default the resource name, or the optional `reference` property if supplied).
+- Each update tries to line up with existing rules by matching `ref` and expression before falling back to names/descriptions; if nothing matches, it downloads a paged rule list for the zone.
 - When a matching rule is found, the existing `ruleId` (and filter) are reused and a `PUT` updates the rule. New rules are created with `POST` calls.
 
 Whilst this has a performance hit, it stops subsequent template deployments failing entirely which is a better compromise at this stage.
