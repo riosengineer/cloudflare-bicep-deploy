@@ -41,14 +41,14 @@ jobs:
           operation: create
           scope: subscription
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          name: CloudFlareExtensionACR
+          name: CloudflareExtensionACR
           location: uksouth
           template-file: ./Infra/main.bicep
           parameters-file: ./Infra/main.bicepparam
 
   publish-extension:
     needs: deploy-acr
-    name: Publish CloudFlare Bicep extension
+    name: Publish Cloudflare Bicep extension
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5

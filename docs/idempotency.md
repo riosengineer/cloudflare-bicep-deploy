@@ -1,6 +1,6 @@
 # Idempotent Resource Handling
 
-The extension keeps repeated `bicep local-deploy` executions safe by reusing existing CloudFlare resources whenever they already exist. Below is the quick reference for the two resource types with custom logic.
+The extension keeps repeated `bicep local-deploy` executions safe by reusing existing Cloudflare resources whenever they already exist. Below is the quick reference for the two resource types with custom logic.
 
 ## DNS Records
 

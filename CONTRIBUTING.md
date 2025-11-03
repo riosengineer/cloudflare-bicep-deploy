@@ -1,10 +1,10 @@
-# Contributing to CloudFlare Bicep Extension
+# Contributing to Cloudflare Bicep Extension
 
-We welcome contributions to the CloudFlare Bicep Extension! Please read our contributing guidelines below.
+We welcome contributions to the Cloudflare Bicep Extension! Please read our contributing guidelines below.
 
 ## Contribution Workflow
 
-Code contributions follow a GitHub-centered workflow. To participate in the development of the CloudFlare Bicep extension, you require a GitHub account first.
+Code contributions follow a GitHub-centered workflow. To participate in the development of the Cloudflare Bicep extension, you require a GitHub account first.
 
 Then, you can follow the steps below:
 
@@ -28,7 +28,7 @@ When you are done with your work, make sure you commit the changes to your branc
 
 ## Adding a New Resource Type
 
-To add a new CloudFlare resource type:
+To add a new Cloudflare resource type:
 
 1. **Create a model class** in the `src/Models/` directory following the pattern of existing models
 2. **Implement a handler** in the `src/Handlers/` directory extending `TypedResourceHandler`
@@ -36,7 +36,7 @@ To add a new CloudFlare resource type:
 4. **Test your changes** locally by running `bicep local-deploy` in the Sample directory
 5. **Open a PR** for review
 
-> **Note**: The structure follows CloudFlare's REST API patterns. Refer to the [CloudFlare API documentation](https://developers.cloudflare.com/api/) for resource specifications.
+> **Note**: The structure follows Cloudflare's REST API patterns. Refer to the [Cloudflare API documentation](https://developers.cloudflare.com/api/) for resource specifications.
 
 ## Code Conventions
 
@@ -109,5 +109,5 @@ To update the documentation after making changes to resource models:
 - [Issues](https://github.com/riosengineer/cloudflare-bicep-deploy/issues)
 - [Pull Requests](https://github.com/riosengineer/cloudflare-bicep-deploy/pulls)
 - [Actions](https://github.com/riosengineer/cloudflare-bicep-deploy/actions)
-- [CloudFlare API Documentation](https://developers.cloudflare.com/api/)
+- [Cloudflare API Documentation](https://developers.cloudflare.com/api/)
 - [Azure Bicep Documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/)

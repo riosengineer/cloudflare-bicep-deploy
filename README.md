@@ -1,13 +1,13 @@
-# CloudFlare Bicep Extension (Experimental)
+# Cloudflare Bicep Extension (Experimental)
 
-A custom Azure Bicep extension for creating CloudFlare DNS resources through Infrastructure as Code (IaC). [Check this out to learn how to create your own .NET Bicep extension](https://techcommunity.microsoft.com/blog/azuregovernanceandmanagementblog/create-your-own-bicep-local-extension-using-net/4439967)
+A custom Azure Bicep extension for creating Cloudflare DNS resources through Infrastructure as Code (IaC). [Check this out to learn how to create your own .NET Bicep extension](https://techcommunity.microsoft.com/blog/azuregovernanceandmanagementblog/create-your-own-bicep-local-extension-using-net/4439967)
 
 ![cloudflare-bicep-ext-feature](cloudflare-bicep-ext.png)
 ![cloudflare-dnsrecords](cloudflare-records.png)
 
 ## 🚀 Overview
 
-This project provides a Bicep extension that enables you to create CloudFlare DNS records and security rules directly from your Azure Bicep templates.
+This project provides a Bicep extension that enables you to create Cloudflare DNS records and security rules directly from your Azure Bicep templates.
 
 > [!NOTE]
 > This is an experimental Bicep feature and is subject to change. Do not use it in production.
@@ -16,10 +16,10 @@ This project provides a Bicep extension that enables you to create CloudFlare DN
 
 Experimental / sample only. Limited functionality to:
 
-- Create CloudFlare DNS Records (A, AAAA, CNAME, MX, TXT, SRV, PTR, NS, CAA)
+- Create Cloudflare DNS Records (A, AAAA, CNAME, MX, TXT, SRV, PTR, NS, CAA)
 - Manage DNS record properties (content, TTL, proxied status)
-- Support for multiple CloudFlare zones
-- Apply CloudFlare Security Rules (Security Rules API)
+- Support for multiple Cloudflare zones
+- Apply Cloudflare Security Rules (Security Rules API)
 - Idempotent updates when running `bicep local-deploy` multiple times (DNS records and security rules are updated in place)
 - Free Plan only currently
 
@@ -32,9 +32,9 @@ See [`Sample/dns.bicep`](Sample/dns.bicep) and [`Sample/security-rule.bicep`](Sa
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [Bicep CLI](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/install)
 
-### CloudFlare API Setup
+### Cloudflare API Setup
 
-You will need to create a CloudFlare API token from the [CloudFlare API Tokens page](https://dash.cloudflare.com/profile/api-tokens).
+You will need to create a Cloudflare API token from the [Cloudflare API Tokens page](https://dash.cloudflare.com/profile/api-tokens).
 
 - Create Custom Token
 - Permissions:
@@ -50,7 +50,7 @@ You will need to create a CloudFlare API token from the [CloudFlare API Tokens p
 targetScope = 'local'
 extension CloudFlare
 
-@description('CloudFlare Zone ID for the domain')
+@description('Cloudflare Zone ID for the domain')
 param zoneId string
 
 // DNS record sample
@@ -100,7 +100,7 @@ Run script `Publish-Extension.ps1` from the folder [Infra/Scripts/](Infra/Script
 ./Infra/Scripts/Publish-Extension.ps1 -Target ./cloudflare-extension
 ```
 
-This creates the binary that contains the CloudFlare API calls. Prepare your `bicepconfig.json` to refer to the binary. Set `experimentalFeaturesEnabled` -> `localDeploy` to `true` and refer to the extension `cloudflare` to the binary:
+This creates the binary that contains the Cloudflare API calls. Prepare your `bicepconfig.json` to refer to the binary. Set `experimentalFeaturesEnabled` -> `localDeploy` to `true` and refer to the extension `cloudflare` to the binary:
 
 ```json
 {
@@ -147,4 +147,4 @@ If you want to try it out without effort, then you can use `br:cloudflarebicep.a
 
 ## 🤝 Contributing
 
-We welcome contributions to the CloudFlare Bicep Extension! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed information on how to contribute to this project.
+We welcome contributions to the Cloudflare Bicep Extension! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed information on how to contribute to this project.
