@@ -1,11 +1,11 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Bicep.Local.Extension.Host.Handlers;
-using CloudFlareExtension.Models;
+using CloudflareExtension.Models;
 
-namespace CloudFlareExtension.Handlers;
+namespace CloudflareExtension.Handlers;
 
-public abstract class CloudFlareResourceHandlerBase<TResource, TIdentifiers> : TypedResourceHandler<TResource, TIdentifiers>
+public abstract class CloudflareResourceHandlerBase<TResource, TIdentifiers> : TypedResourceHandler<TResource, TIdentifiers>
     where TResource : class, TIdentifiers
     where TIdentifiers : class
 {
@@ -19,7 +19,7 @@ public abstract class CloudFlareResourceHandlerBase<TResource, TIdentifiers> : T
     {
         var client = new HttpClient();
         
-        // Set up CloudFlare API authentication
+        // Set up Cloudflare API authentication
         var apiToken = configuration.ApiToken ?? Environment.GetEnvironmentVariable("CLOUDFLARE_API_TOKEN");
         var apiKey = configuration.ApiKey ?? Environment.GetEnvironmentVariable("CLOUDFLARE_API_KEY");
         var email = configuration.Email ?? Environment.GetEnvironmentVariable("CLOUDFLARE_EMAIL");
@@ -37,10 +37,10 @@ public abstract class CloudFlareResourceHandlerBase<TResource, TIdentifiers> : T
         }
         else
         {
-            throw new InvalidOperationException("CloudFlare authentication not configured. Please provide either API Token or API Key + Email.");
+            throw new InvalidOperationException("Cloudflare authentication not configured. Please provide either API Token or API Key + Email.");
         }
 
-        client.DefaultRequestHeaders.Add("User-Agent", "CloudFlare-Bicep-Extension/0.1.0");
+        client.DefaultRequestHeaders.Add("User-Agent", "Cloudflare-Bicep-Extension/0.1.0");
         return client;
     }
 

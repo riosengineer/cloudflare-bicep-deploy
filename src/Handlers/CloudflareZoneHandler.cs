@@ -1,10 +1,10 @@
 using Bicep.Local.Extension.Host.Handlers;
-using CloudFlareExtension.Models;
-using CloudFlareExtension.Services;
+using CloudflareExtension.Models;
+using CloudflareExtension.Services;
 
-namespace CloudFlareExtension.Handlers;
+namespace CloudflareExtension.Handlers;
 
-public class CloudFlareZoneHandler : TypedResourceHandler<CloudFlareZone, CloudFlareZoneIdentifiers>
+public class CloudflareZoneHandler : TypedResourceHandler<CloudflareZone, CloudflareZoneIdentifiers>
 {
     protected override Task<ResourceResponse> Preview(ResourceRequest request, CancellationToken cancellationToken)
     {
@@ -17,7 +17,7 @@ public class CloudFlareZoneHandler : TypedResourceHandler<CloudFlareZone, CloudF
         try
         {
             var config = Configuration.GetConfiguration();
-            using var apiService = new CloudFlareApiService(config);
+            using var apiService = new CloudflareApiService(config);
 
             // Check if zone already exists
             var existingZone = await apiService.GetZoneAsync(request.Properties.Name, cancellationToken);
@@ -47,11 +47,11 @@ public class CloudFlareZoneHandler : TypedResourceHandler<CloudFlareZone, CloudF
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to create/update CloudFlare zone '{request.Properties.Name}': {ex.Message}", ex);
+            throw new InvalidOperationException($"Failed to create/update Cloudflare zone '{request.Properties.Name}': {ex.Message}", ex);
         }
     }
 
-    protected override CloudFlareZoneIdentifiers GetIdentifiers(CloudFlareZone properties)
+    protected override CloudflareZoneIdentifiers GetIdentifiers(CloudflareZone properties)
         => new()
         {
             Name = properties.Name,
