@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
-namespace CloudFlareExtension.Models;
+namespace CloudflareExtension.Models;
 
-// DNS Record Types supported by CloudFlare - using constants for compatibility
+// DNS Record Types supported by Cloudflare - using constants for compatibility
 public static class DnsRecordType
 {
     public const string A = "A";
@@ -30,14 +30,14 @@ public static class ZoneStatus
     public const string Deactivated = "Deactivated";
 }
 
-// CloudFlare Zone Resource Identifiers
-public class CloudFlareZoneIdentifiers
+// Cloudflare Zone Resource Identifiers
+public class CloudflareZoneIdentifiers
 {
     [TypeProperty("The zone name (domain)", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
     public required string Name { get; set; }
 }
 
-// CloudFlare Zone Resource
+// Cloudflare Zone Resource
 [BicepDocHeading("Zone", "Manages a Cloudflare DNS Zone")]
 [BicepDocExample(
     "Creating a basic DNS zone",
@@ -53,7 +53,7 @@ public class CloudFlareZoneIdentifiers
 "
 )]
 [ResourceType("Zone")]
-public class CloudFlareZone : CloudFlareZoneIdentifiers
+public class CloudflareZone : CloudflareZoneIdentifiers
 {
     [TypeProperty("The zone plan type", ObjectTypePropertyFlags.Required)]
     public string Plan { get; set; } = "free";
@@ -71,8 +71,8 @@ public class CloudFlareZone : CloudFlareZoneIdentifiers
     public string[]? NameServers { get; set; }
 }
 
-// CloudFlare DNS Record Resource Identifiers
-public class CloudFlareDnsRecordIdentifiers
+// Cloudflare DNS Record Resource Identifiers
+public class CloudflareDnsRecordIdentifiers
 {
     [TypeProperty("The DNS record name", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
     public required string Name { get; set; }
@@ -81,7 +81,7 @@ public class CloudFlareDnsRecordIdentifiers
     public required string ZoneName { get; set; }
 }
 
-// CloudFlare DNS Record Resource
+// Cloudflare DNS Record Resource
 [BicepDocHeading("DnsRecord", "Manages a Cloudflare DNS Record")]
 [BicepDocExample(
     "Creating a basic DNS record",
@@ -99,7 +99,7 @@ public class CloudFlareDnsRecordIdentifiers
 "
 )]
 [ResourceType("DnsRecord")]
-public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
+public class CloudflareDnsRecord : CloudflareDnsRecordIdentifiers
 {
     [TypeProperty("The DNS record type", ObjectTypePropertyFlags.Required)]
     public required string Type { get; set; }
@@ -110,7 +110,7 @@ public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
     [TypeProperty("Time to live for the record")]
     public int Ttl { get; set; } = 300;
 
-    [TypeProperty("Whether the record is proxied through CloudFlare")]
+    [TypeProperty("Whether the record is proxied through Cloudflare")]
     public bool Proxied { get; set; } = false;
 
     [TypeProperty("Priority for MX/SRV records")]
@@ -130,7 +130,7 @@ public class CloudFlareDnsRecord : CloudFlareDnsRecordIdentifiers
 }
 
 
-public static class CloudFlareSecurityRuleActions
+public static class CloudflareSecurityRuleActions
 {
     private static readonly Dictionary<string, string> NormalizedActions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -157,7 +157,7 @@ public static class CloudFlareSecurityRuleActions
     public static IEnumerable<string> SupportedActions => NormalizedActions.Keys;
 }
 
-public class CloudFlareSecurityRuleIdentifiers
+public class CloudflareSecurityRuleIdentifiers
 {
     [TypeProperty("The logical name of the security rule", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
     public required string Name { get; set; }
@@ -181,7 +181,7 @@ public class CloudFlareSecurityRuleIdentifiers
 "
 )]
 [ResourceType("SecurityRule")]
-public class CloudFlareSecurityRule : CloudFlareSecurityRuleIdentifiers
+public class CloudflareSecurityRule : CloudflareSecurityRuleIdentifiers
 {
     [TypeProperty("Human friendly description shown in the Cloudflare dashboard")]
     public string? Description { get; set; }

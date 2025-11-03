@@ -1,23 +1,23 @@
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
-namespace CloudFlareExtension.Models;
+namespace CloudflareExtension.Models;
 
 /// <summary>
-/// CloudFlare API Configuration - supports both API Token and API Key + Email authentication
+/// Cloudflare API Configuration - supports both API Token and API Key + Email authentication
 /// </summary>
 public class Configuration
 {
-    [TypeProperty("CloudFlare API Token (recommended)")]
+    [TypeProperty("Cloudflare API Token (recommended)")]
     public string? ApiToken { get; set; }
 
-    [TypeProperty("CloudFlare API Key (legacy)")]
+    [TypeProperty("Cloudflare API Key (legacy)")]
     public string? ApiKey { get; set; }
 
-    [TypeProperty("CloudFlare account email (required with API Key)")]
+    [TypeProperty("Cloudflare account email (required with API Key)")]
     public string? Email { get; set; }
 
-    [TypeProperty("Base URL for CloudFlare API")]
+    [TypeProperty("Base URL for Cloudflare API")]
     public string BaseUrl { get; set; } = "https://api.cloudflare.com/client/v4";
 
     /// <summary>
@@ -52,7 +52,7 @@ public class Configuration
         }
 
         throw new InvalidOperationException(
-            "CloudFlare authentication not configured. Please provide either:\n" +
+            "Cloudflare authentication not configured. Please provide either:\n" +
             "1. CLOUDFLARE_API_TOKEN environment variable, or\n" +
             "2. Both CLOUDFLARE_API_KEY and CLOUDFLARE_EMAIL environment variables");
     }

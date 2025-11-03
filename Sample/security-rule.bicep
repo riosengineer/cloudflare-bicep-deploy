@@ -1,8 +1,8 @@
 targetScope = 'local'
 
-extension CloudFlare
+extension Cloudflare
 
-@description('CloudFlare Zone ID for the domain.')
+@description('Cloudflare Zone ID for the domain.')
 @minLength(32)
 @maxLength(32)
 param zoneId string
@@ -14,7 +14,7 @@ param securityRuleExpression string
 @description('Whether the security rule is enabled.')
 param enabled bool = true
 
-// Block traffic from country using CloudFlare free plan security rules
+// Block traffic from country using Cloudflare free plan security rules
 resource blockCountryTraffic 'SecurityRule' = {
   name: 'blockCountryTraffic'
   zoneId: zoneId

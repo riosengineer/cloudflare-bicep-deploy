@@ -1,10 +1,10 @@
 using Bicep.Local.Extension.Host.Handlers;
-using CloudFlareExtension.Models;
-using CloudFlareExtension.Services;
+using CloudflareExtension.Models;
+using CloudflareExtension.Services;
 
-namespace CloudFlareExtension.Handlers;
+namespace CloudflareExtension.Handlers;
 
-public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsRecord, CloudFlareDnsRecordIdentifiers>
+public class CloudflareDnsRecordHandler : TypedResourceHandler<CloudflareDnsRecord, CloudflareDnsRecordIdentifiers>
 {
     protected override Task<ResourceResponse> Preview(ResourceRequest request, CancellationToken cancellationToken)
     {
@@ -17,12 +17,12 @@ public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsReco
         try
         {
             var config = Configuration.GetConfiguration();
-            using var apiService = new CloudFlareApiService(config);
+            using var apiService = new CloudflareApiService(config);
 
             // Use the zone ID provided in the Bicep template
             if (string.IsNullOrEmpty(request.Properties.ZoneId))
             {
-                throw new InvalidOperationException($"ZoneId is required for DNS record '{request.Properties.Name}'. Please provide the CloudFlare Zone ID in your Bicep template.");
+                throw new InvalidOperationException($"ZoneId is required for DNS record '{request.Properties.Name}'. Please provide the Cloudflare Zone ID in your Bicep template.");
             }
 
             if (string.IsNullOrWhiteSpace(request.Properties.RecordId))
@@ -43,7 +43,7 @@ public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsReco
                 var zone = await apiService.GetZoneAsync(normalizedInputZone, cancellationToken);
                 if (zone is not null && !string.Equals(zone.Name, normalizedInputZone, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException($"Zone name '{request.Properties.ZoneName}' does not match the CloudFlare zone '{zone.Name}' (ID {request.Properties.ZoneId}).");
+                    throw new InvalidOperationException($"Zone name '{request.Properties.ZoneName}' does not match the Cloudflare zone '{zone.Name}' (ID {request.Properties.ZoneId}).");
                 }
             }
 
@@ -62,7 +62,7 @@ public class CloudFlareDnsRecordHandler : TypedResourceHandler<CloudFlareDnsReco
         }
     }
 
-    protected override CloudFlareDnsRecordIdentifiers GetIdentifiers(CloudFlareDnsRecord properties)
+    protected override CloudflareDnsRecordIdentifiers GetIdentifiers(CloudflareDnsRecord properties)
         => new()
         {
             Name = properties.Name,

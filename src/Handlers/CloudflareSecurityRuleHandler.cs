@@ -1,10 +1,10 @@
 using Bicep.Local.Extension.Host.Handlers;
-using CloudFlareExtension.Models;
-using CloudFlareExtension.Services;
+using CloudflareExtension.Models;
+using CloudflareExtension.Services;
 
-namespace CloudFlareExtension.Handlers;
+namespace CloudflareExtension.Handlers;
 
-public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecurityRule, CloudFlareSecurityRuleIdentifiers>
+public class CloudflareSecurityRuleHandler : TypedResourceHandler<CloudflareSecurityRule, CloudflareSecurityRuleIdentifiers>
 {
     protected override Task<ResourceResponse> Preview(ResourceRequest request, CancellationToken cancellationToken)
         => Task.FromResult(GetResponse(request));
@@ -33,7 +33,7 @@ public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecu
             }
 
             var config = Configuration.GetConfiguration();
-            using var apiService = new CloudFlareApiService(config);
+            using var apiService = new CloudflareApiService(config);
 
             if (string.IsNullOrWhiteSpace(request.Properties.RuleId))
             {
@@ -52,9 +52,9 @@ public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecu
                 }
             }
 
-            if (!CloudFlareSecurityRuleActions.TryNormalize(request.Properties.Action, out var normalizedAction))
+            if (!CloudflareSecurityRuleActions.TryNormalize(request.Properties.Action, out var normalizedAction))
             {
-                var supported = string.Join(", ", CloudFlareSecurityRuleActions.SupportedActions);
+                var supported = string.Join(", ", CloudflareSecurityRuleActions.SupportedActions);
                 throw new InvalidOperationException($"Action '{request.Properties.Action}' is not supported. Allowed values: {supported}.");
             }
 
@@ -79,7 +79,7 @@ public class CloudFlareSecurityRuleHandler : TypedResourceHandler<CloudFlareSecu
         }
     }
 
-    protected override CloudFlareSecurityRuleIdentifiers GetIdentifiers(CloudFlareSecurityRule properties)
+    protected override CloudflareSecurityRuleIdentifiers GetIdentifiers(CloudflareSecurityRule properties)
         => new()
         {
             Name = properties.Name,

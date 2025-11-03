@@ -1,19 +1,19 @@
 targetScope = 'local'
 
-extension CloudFlare
+extension Cloudflare
 
 @description('Domain name for the DNS record samples')
 param domainName string = 'rios.engineer'
 
-@description('CloudFlare Zone ID for the domain')
+@description('Cloudflare Zone ID for the domain')
 @minLength(32)
 @maxLength(32)
 param zoneId string
 
 @description('Test value for the TXT record')
-param testValue string = 'Hello from Bicep CloudFlare Extension!'
+param testValue string = 'Hello from Bicep Cloudflare Extension!'
 
-// Create TXT Record in CloudFlare
+// Create TXT Record in Cloudflare
 resource txtRecord 'DnsRecord' = {
   name: 'txtRecord'
   zoneName: domainName

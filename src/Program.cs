@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Builder;
 using Bicep.Local.Extension.Host.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using CloudFlareExtension.Handlers;
-using CloudFlareExtension.Models;
+using CloudflareExtension.Handlers;
+using CloudflareExtension.Models;
 
 var builder = WebApplication.CreateBuilder();
 
 builder.AddBicepExtensionHost(args);
 builder.Services
     .AddBicepExtension(
-        name: "CloudFlare",
+        name: "Cloudflare",
         version: "1.0.0",
         isSingleton: true,
         typeAssembly: typeof(Program).Assembly,
         configurationType: typeof(Configuration))
-    .WithResourceHandler<CloudFlareZoneHandler>()
-    .WithResourceHandler<CloudFlareDnsRecordHandler>()
-    .WithResourceHandler<CloudFlareSecurityRuleHandler>();
+    .WithResourceHandler<CloudflareZoneHandler>()
+    .WithResourceHandler<CloudflareDnsRecordHandler>()
+    .WithResourceHandler<CloudflareSecurityRuleHandler>();
 
 var app = builder.Build();
 

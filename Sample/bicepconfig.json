@@ -3,7 +3,7 @@
     "localDeploy": true
   },
   "extensions": {
-    // "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.25" // ACR
-    "CloudFlare": "../bin/cloudflare" // local
+    // "Cloudflare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.25" // ACR
+    "Cloudflare": "../bin/cloudflare" // local
   }
 }

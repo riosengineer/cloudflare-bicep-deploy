@@ -33,6 +33,6 @@ The following arguments are available:
 - `comment` - (Optional) A comment describing the DNS record
 - `priority` - (Optional) Priority for MX/SRV records
 - `proxiable` - (Optional) Whether this record can be proxied
-- `proxied` - (Optional) Whether the record is proxied through CloudFlare
+- `proxied` - (Optional) Whether the record is proxied through Cloudflare
 - `recordId` - (Optional) DNS record ID (output only)
 - `ttl` - (Optional) Time to live for the record

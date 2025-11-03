@@ -16,7 +16,7 @@ function ExecSafe([scriptblock] $ScriptBlock) {
 $root = "$PSScriptRoot/../.."
 $extName = "cloudflare-extension"
 
-Write-Host "Building CloudFlare Bicep Extension for multiple platforms..." -ForegroundColor Green
+Write-Host "Building Cloudflare Bicep Extension for multiple platforms..." -ForegroundColor Green
 
 # build various flavors
 Write-Host "Building for macOS ARM64..." -ForegroundColor Yellow
@@ -28,7 +28,7 @@ ExecSafe { dotnet publish --configuration Release $root -r linux-x64 }
 Write-Host "Building for Windows x64..." -ForegroundColor Yellow
 ExecSafe { dotnet publish --configuration Release $root -r win-x64 }
 
-Write-Host "Publishing CloudFlare extension to target: $Target" -ForegroundColor Green
+Write-Host "Publishing Cloudflare extension to target: $Target" -ForegroundColor Green
 
 # publish to the registry
 ExecSafe { bicep publish-extension `
@@ -39,4 +39,4 @@ ExecSafe { bicep publish-extension `
   --force 
 }
 
-Write-Host "CloudFlare Bicep Extension published successfully!" -ForegroundColor Green
+Write-Host "Cloudflare Bicep Extension published successfully!" -ForegroundColor Green
