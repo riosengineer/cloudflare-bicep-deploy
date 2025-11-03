@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder();
 builder.AddBicepExtensionHost(args);
 builder.Services
     .AddBicepExtension(
-        name: "CloudFlare",
+        name: "Cloudflare",
         version: "1.0.0",
         isSingleton: true,
         typeAssembly: typeof(Program).Assembly,

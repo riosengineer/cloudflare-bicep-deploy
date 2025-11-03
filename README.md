@@ -48,7 +48,7 @@ You will need to create a Cloudflare API token from the [Cloudflare API Tokens p
 
 ```bicep
 targetScope = 'local'
-extension CloudFlare
+extension Cloudflare
 
 @description('Cloudflare Zone ID for the domain')
 param zoneId string
@@ -108,7 +108,7 @@ This creates the binary that contains the Cloudflare API calls. Prepare your `bi
     "localDeploy": true
   },
   "extensions": {
-    "CloudFlare": "../bin/cloudflare" // local
+    "Cloudflare": "../bin/cloudflare" // local
   },
   "implicitExtensions": []
 }
@@ -134,8 +134,8 @@ In the `bicepconfig.json` you refer to the ACR:
     "localDeploy": true
   },
   "extensions": {
-      "CloudFlare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.25" // ACR
-    // "CloudFlare": "../bin/cloudflare" // local
+      "Cloudflare": "br:cloudflarebicep.azurecr.io/cloudflare:0.1.25" // ACR
+    // "Cloudflare": "../bin/cloudflare" // local
   },
   "implicitExtensions": []
 }

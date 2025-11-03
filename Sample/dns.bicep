@@ -1,6 +1,6 @@
 targetScope = 'local'
 
-extension CloudFlare
+extension Cloudflare
 
 @description('Domain name for the DNS record samples')
 param domainName string = 'rios.engineer'

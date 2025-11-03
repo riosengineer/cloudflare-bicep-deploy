@@ -1,6 +1,6 @@
 targetScope = 'local'
 
-extension CloudFlare
+extension Cloudflare
 
 @description('Cloudflare Zone ID for the domain.')
 @minLength(32)

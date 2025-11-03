@@ -53,7 +53,7 @@ To add a new Cloudflare resource type:
    ```json
    {
      "extensions": {
-       "CloudFlare": "../bin/cloudflare"
+       "Cloudflare": "../bin/cloudflare"
      }
    }
    ```
@@ -63,7 +63,7 @@ To add a new Cloudflare resource type:
    ```json
    {
      "extensions": {
-       "CloudFlare": "br:youracr.azurecr.io/cloudflare:0.1.0" // example
+       "Cloudflare": "br:youracr.azurecr.io/cloudflare:0.1.0" // example
      }
    }
    ```
