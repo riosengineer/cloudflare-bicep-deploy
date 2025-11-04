@@ -82,6 +82,8 @@ output securityRuleId string = blockCountryTraffic.ruleId
 ...
 ```
 
+Run `bicep local-deploy Samples/dns.bicepparam`
+
 > [!NOTE]
 > The `SecurityRule` resource maps to the Cloudflare [Security Rules](https://developers.cloudflare.com/security/rules/) API and supports the free plan feature set.
 > Specify the optional `reference` property when you need a custom Cloudflare identifier; the extension otherwise defaults it to the resource name on first deploy.
@@ -113,8 +115,6 @@ This creates the binary that contains the Cloudflare API calls. Prepare your `bi
   "implicitExtensions": []
 }
 ```
-
-Run `bicep local-deploy Sample/dns.bicep --parameters zoneId='<your-zone-id>'` or `bicep local-deploy Sample/security-rule.bicep --parameters zoneId='<your-zone-id>' securityRuleExpression='(ip.src.country eq "CN")'` to test the extension locally. Also, see the examples in the [Sample](Sample/) folder.
 
 ### Azure Container Registry build
 
