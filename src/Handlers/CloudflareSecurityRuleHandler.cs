@@ -6,6 +6,17 @@ namespace CloudflareExtension.Handlers;
 
 public class CloudflareSecurityRuleHandler : TypedResourceHandler<CloudflareSecurityRule, CloudflareSecurityRuleIdentifiers>
 {
+    private readonly ICloudflareApiServiceFactory _apiServiceFactory;
+
+    public CloudflareSecurityRuleHandler() : this(new CloudflareApiServiceFactory())
+    {
+    }
+
+    public CloudflareSecurityRuleHandler(ICloudflareApiServiceFactory apiServiceFactory)
+    {
+        _apiServiceFactory = apiServiceFactory;
+    }
+
     protected override Task<ResourceResponse> Preview(ResourceRequest request, CancellationToken cancellationToken)
         => Task.FromResult(GetResponse(request));
 
@@ -32,8 +43,7 @@ public class CloudflareSecurityRuleHandler : TypedResourceHandler<CloudflareSecu
                 request.Properties.Reference = request.Properties.Reference.Trim();
             }
 
-            var config = Configuration.GetConfiguration();
-            using var apiService = new CloudflareApiService(config);
+            using var apiService = _apiServiceFactory.Create();
 
             if (string.IsNullOrWhiteSpace(request.Properties.RuleId))
             {

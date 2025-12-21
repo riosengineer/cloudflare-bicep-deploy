@@ -13,7 +13,7 @@ namespace CloudflareExtension.Services;
 /// <summary>
 /// Cloudflare API Service for making authenticated requests to Cloudflare API
 /// </summary>
-public class CloudflareApiService : IDisposable
+public class CloudflareApiService : ICloudflareApiService
 {
     private readonly HttpClient _httpClient;
     private readonly Configuration _config;

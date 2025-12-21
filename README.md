@@ -141,6 +141,20 @@ In the `bicepconfig.json` you refer to the ACR:
 }
 ```
 
+### Testing
+
+Run the unit tests with:
+
+```powershell
+dotnet test
+```
+
+For detailed output:
+
+```powershell
+dotnet test --logger "console;verbosity=detailed"
+```
+
 ### Public ACR
 
 If you want to try it out without effort, then you can use `br:cloudflarebicep.azurecr.io/extensions/cloudflare:0.1.25` as the ACR reference which I have published.

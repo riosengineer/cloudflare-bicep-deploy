@@ -6,6 +6,17 @@ namespace CloudflareExtension.Handlers;
 
 public class CloudflareDnsRecordHandler : TypedResourceHandler<CloudflareDnsRecord, CloudflareDnsRecordIdentifiers>
 {
+    private readonly ICloudflareApiServiceFactory _apiServiceFactory;
+
+    public CloudflareDnsRecordHandler() : this(new CloudflareApiServiceFactory())
+    {
+    }
+
+    public CloudflareDnsRecordHandler(ICloudflareApiServiceFactory apiServiceFactory)
+    {
+        _apiServiceFactory = apiServiceFactory;
+    }
+
     protected override Task<ResourceResponse> Preview(ResourceRequest request, CancellationToken cancellationToken)
     {
         // For preview, just return the requested configuration without making API calls
@@ -16,8 +27,7 @@ public class CloudflareDnsRecordHandler : TypedResourceHandler<CloudflareDnsReco
     {
         try
         {
-            var config = Configuration.GetConfiguration();
-            using var apiService = new CloudflareApiService(config);
+            using var apiService = _apiServiceFactory.Create();
 
             // Use the zone ID provided in the Bicep template
             if (string.IsNullOrEmpty(request.Properties.ZoneId))
