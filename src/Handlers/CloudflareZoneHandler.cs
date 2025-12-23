@@ -6,6 +6,17 @@ namespace CloudflareExtension.Handlers;
 
 public class CloudflareZoneHandler : TypedResourceHandler<CloudflareZone, CloudflareZoneIdentifiers>
 {
+    private readonly ICloudflareApiServiceFactory _apiServiceFactory;
+
+    public CloudflareZoneHandler() : this(new CloudflareApiServiceFactory())
+    {
+    }
+
+    public CloudflareZoneHandler(ICloudflareApiServiceFactory apiServiceFactory)
+    {
+        _apiServiceFactory = apiServiceFactory;
+    }
+
     protected override Task<ResourceResponse> Preview(ResourceRequest request, CancellationToken cancellationToken)
     {
         // For preview, just return the requested configuration without making API calls
@@ -16,8 +27,7 @@ public class CloudflareZoneHandler : TypedResourceHandler<CloudflareZone, Cloudf
     {
         try
         {
-            var config = Configuration.GetConfiguration();
-            using var apiService = new CloudflareApiService(config);
+            using var apiService = _apiServiceFactory.Create();
 
             // Check if zone already exists
             var existingZone = await apiService.GetZoneAsync(request.Properties.Name, cancellationToken);
