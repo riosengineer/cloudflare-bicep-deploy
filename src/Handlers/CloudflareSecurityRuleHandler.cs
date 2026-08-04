@@ -51,10 +51,6 @@ public class CloudflareSecurityRuleHandler : TypedResourceHandler<CloudflareSecu
                 if (existingRule is not null)
                 {
                     request.Properties.RuleId = existingRule.Id;
-                    if (string.IsNullOrWhiteSpace(request.Properties.FilterId) && existingRule.Filter is not null)
-                    {
-                        request.Properties.FilterId = existingRule.Filter.Id;
-                    }
                     if (!string.IsNullOrWhiteSpace(existingRule.Ref))
                     {
                         request.Properties.Reference = existingRule.Ref;
@@ -73,7 +69,6 @@ public class CloudflareSecurityRuleHandler : TypedResourceHandler<CloudflareSecu
             var updatedRule = await apiService.UpsertSecurityRuleAsync(request.Properties, cancellationToken);
 
             request.Properties.RuleId = updatedRule.RuleId;
-            request.Properties.FilterId = updatedRule.FilterId;
             request.Properties.Expression = updatedRule.Expression;
             request.Properties.Action = updatedRule.Action;
             request.Properties.Enabled = updatedRule.Enabled;

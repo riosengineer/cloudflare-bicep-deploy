@@ -30,9 +30,7 @@ public class CloudflareApiService : ICloudflareApiService
         _config = config;
         _config.Validate();
 
-        _baseUrl = string.IsNullOrWhiteSpace(_config.BaseUrl)
-            ? "https://api.cloudflare.com/client/v4"
-            : _config.BaseUrl.TrimEnd('/');
+        _baseUrl = ResolveBaseUrl(_config.BaseUrl);
 
         _httpClient = new HttpClient();
         // Don't set BaseAddress - use full URLs instead
@@ -190,64 +188,28 @@ public class CloudflareApiService : ICloudflareApiService
         ArgumentException.ThrowIfNullOrWhiteSpace(zoneId);
         ArgumentNullException.ThrowIfNull(rule);
 
-        if (!string.IsNullOrWhiteSpace(rule.RuleId))
+        var entrypointRuleset = await GetZoneCustomRulesEntrypointAsync(zoneId, cancellationToken, createIfMissing: false);
+        if (entrypointRuleset?.Rules is null || entrypointRuleset.Rules.Length == 0)
         {
-            var path = $"/zones/{zoneId}/firewall/rules/{rule.RuleId}";
-            var response = await SendWithRetryAsync(
-                () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)),
-                cancellationToken);
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return null;
-            }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorText = await response.Content.ReadAsStringAsync(cancellationToken);
-                throw new InvalidOperationException($"Cloudflare API request to '/zones/{zoneId}/firewall/rules/{rule.RuleId}' failed: {response.StatusCode} - {errorText}");
-            }
-
-            return await DeserializeApiResponseAsync<CloudflareSecurityRuleApiResult>(response, cancellationToken, path);
+            return null;
         }
 
-        foreach (var query in GetSecurityRuleLookupQueries(rule))
-        {
-            var match = await QuerySingleAsync<CloudflareSecurityRuleApiResult>(
-                $"/zones/{zoneId}/firewall/rules",
-                query,
-                cancellationToken,
-                allowClientErrors: true);
-            if (match is not null)
-            {
-                return match;
-            }
-        }
-
-        var listQuery = new Dictionary<string, string>
-        {
-            ["per_page"] = "500"
-        };
-
-        var listPath = BuildPath($"/zones/{zoneId}/firewall/rules", listQuery);
-        var listResponse = await SendWithRetryAsync(
-            () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(listPath)),
-            cancellationToken);
-
-        if (!listResponse.IsSuccessStatusCode)
-        {
-            var error = await listResponse.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException($"Cloudflare API request to '{listPath}' failed: {listResponse.StatusCode} - {error}");
-        }
-
-        var rules = await DeserializeApiResponseAsync<CloudflareSecurityRuleApiResult[]>(listResponse, cancellationToken);
         var reference = GetSecurityRuleReference(rule);
 
-        return rules.FirstOrDefault(candidate =>
+        if (!string.IsNullOrWhiteSpace(rule.RuleId))
+        {
+            var directMatch = entrypointRuleset.Rules.FirstOrDefault(candidate => string.Equals(candidate.Id, rule.RuleId, StringComparison.OrdinalIgnoreCase));
+            if (directMatch is not null)
+            {
+                return directMatch;
+            }
+        }
+
+        return entrypointRuleset.Rules.FirstOrDefault(candidate =>
             (!string.IsNullOrWhiteSpace(reference) && !string.IsNullOrWhiteSpace(candidate.Ref) && string.Equals(candidate.Ref, reference, StringComparison.OrdinalIgnoreCase)) ||
-            (candidate.Filter is not null && !string.IsNullOrWhiteSpace(candidate.Filter.Expression) && string.Equals(candidate.Filter.Expression, rule.Expression, StringComparison.OrdinalIgnoreCase)) ||
+            (!string.IsNullOrWhiteSpace(candidate.Expression) && string.Equals(candidate.Expression, rule.Expression, StringComparison.OrdinalIgnoreCase)) ||
             (!string.IsNullOrWhiteSpace(candidate.Description) && string.Equals(candidate.Description, rule.Name, StringComparison.OrdinalIgnoreCase)) ||
-            (!string.IsNullOrWhiteSpace(candidate.Description) && string.Equals(candidate.Description, rule.Description, StringComparison.OrdinalIgnoreCase)) ||
-            (candidate.Filter is not null && !string.IsNullOrWhiteSpace(candidate.Filter.Description) && string.Equals(candidate.Filter.Description, rule.Name, StringComparison.OrdinalIgnoreCase)));
+            (!string.IsNullOrWhiteSpace(candidate.Description) && string.Equals(candidate.Description, rule.Description, StringComparison.OrdinalIgnoreCase)));
     }
 
     public async Task<CloudflareSecurityRule> UpsertSecurityRuleAsync(CloudflareSecurityRule rule, CancellationToken cancellationToken = default)
@@ -259,11 +221,14 @@ public class CloudflareApiService : ICloudflareApiService
             throw new InvalidOperationException($"ZoneId is required to manage security rule '{rule.Name}'.");
         }
 
+        var entrypointRuleset = await GetZoneCustomRulesEntrypointAsync(rule.ZoneId, cancellationToken, createIfMissing: true)
+            ?? throw new InvalidOperationException($"Failed to resolve WAF custom rules entrypoint ruleset for zone '{rule.ZoneId}'.");
+
         if (!string.IsNullOrWhiteSpace(rule.RuleId))
         {
             var payload = BuildSecurityRulePayload(rule, includeRef: false);
-            var path = $"/zones/{rule.ZoneId}/firewall/rules/{rule.RuleId}";
-            var response = await SendJsonAsync(HttpMethod.Put,
+            var path = $"/zones/{rule.ZoneId}/rulesets/{entrypointRuleset.Id}/rules/{rule.RuleId}";
+            var response = await SendJsonAsync(HttpMethod.Patch,
                 path,
                 payload,
                 cancellationToken);
@@ -274,19 +239,14 @@ public class CloudflareApiService : ICloudflareApiService
         else
         {
             var payload = BuildSecurityRulePayload(rule, includeRef: true);
-            var path = $"/zones/{rule.ZoneId}/firewall/rules";
+            var path = $"/zones/{rule.ZoneId}/rulesets/{entrypointRuleset.Id}/rules";
             var response = await SendJsonAsync(HttpMethod.Post,
                 path,
-                new[] { payload },
+                payload,
                 cancellationToken);
 
-            var apiRules = await DeserializeApiResponseAsync<CloudflareSecurityRuleApiResult[]>(response, cancellationToken, path);
-            if (apiRules.Length == 0)
-            {
-                throw new InvalidOperationException("Cloudflare API returned no security rules in the response.");
-            }
-
-            return MapApiSecurityRule(rule, apiRules[0]);
+            var apiRule = await DeserializeApiResponseAsync<CloudflareSecurityRuleApiResult>(response, cancellationToken, path);
+            return MapApiSecurityRule(rule, apiRule);
         }
     }
 
@@ -299,24 +259,12 @@ public class CloudflareApiService : ICloudflareApiService
     {
         var description = string.IsNullOrWhiteSpace(rule.Description) ? rule.Name : rule.Description;
 
-        var filter = new Dictionary<string, object?>
-        {
-            ["expression"] = rule.Expression,
-            ["paused"] = !rule.Enabled,
-            ["description"] = description
-        };
-
-        if (!string.IsNullOrWhiteSpace(rule.FilterId))
-        {
-            filter["id"] = rule.FilterId;
-        }
-
         var payload = new Dictionary<string, object?>
         {
             ["action"] = rule.Action,
+            ["expression"] = rule.Expression,
             ["description"] = description,
-            ["paused"] = !rule.Enabled,
-            ["filter"] = filter
+            ["enabled"] = rule.Enabled
         };
 
         if (includeRef)
@@ -495,58 +443,56 @@ public class CloudflareApiService : ICloudflareApiService
     {
         rule.RuleId = apiRule.Id;
         rule.Action = apiRule.Action;
-        rule.Description = apiRule.Description;
+        rule.Description = string.IsNullOrWhiteSpace(apiRule.Description) ? rule.Description : apiRule.Description;
+        if (!string.IsNullOrWhiteSpace(apiRule.Expression))
+        {
+            rule.Expression = apiRule.Expression;
+        }
+
+        rule.Enabled = apiRule.Enabled ?? true;
+
         if (!string.IsNullOrWhiteSpace(apiRule.Ref))
         {
             rule.Reference = apiRule.Ref;
         }
 
-        if (apiRule.Filter is not null)
-        {
-            rule.FilterId = apiRule.Filter.Id;
-            rule.Expression = apiRule.Filter.Expression;
-            if (string.IsNullOrWhiteSpace(rule.Description))
-            {
-                rule.Description = apiRule.Filter.Description;
-            }
-            rule.Enabled = !(apiRule.Paused || apiRule.Filter.Paused);
-        }
-        else
-        {
-            rule.Enabled = !apiRule.Paused;
-        }
-
         return rule;
     }
 
-    private static IEnumerable<Dictionary<string, string>> GetSecurityRuleLookupQueries(CloudflareSecurityRule rule)
+    private async Task<CloudflareRulesetApiResult?> GetZoneCustomRulesEntrypointAsync(string zoneId, CancellationToken cancellationToken, bool createIfMissing)
     {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var path = $"/zones/{zoneId}/rulesets/phases/http_request_firewall_custom/entrypoint";
+        var response = await SendWithRetryAsync(
+            () => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)),
+            cancellationToken);
 
-        foreach (var candidate in EnumerateSecurityRuleDescriptions(rule))
+        if (response.StatusCode == HttpStatusCode.NotFound)
         {
-            if (seen.Add(candidate))
+            if (!createIfMissing)
             {
-                yield return new Dictionary<string, string>
-                {
-                    ["per_page"] = "1",
-                    ["description"] = candidate
-                };
+                return null;
             }
-        }
-    }
 
-    private static IEnumerable<string> EnumerateSecurityRuleDescriptions(CloudflareSecurityRule rule)
-    {
-        if (!string.IsNullOrWhiteSpace(rule.Name))
-        {
-            yield return rule.Name.Trim();
+            var createPath = $"/zones/{zoneId}/rulesets";
+            var createPayload = new Dictionary<string, object?>
+            {
+                ["name"] = "Bicep Security Rules",
+                ["kind"] = "zone",
+                ["phase"] = "http_request_firewall_custom",
+                ["rules"] = Array.Empty<object>()
+            };
+
+            var createResponse = await SendJsonAsync(HttpMethod.Post, createPath, createPayload, cancellationToken);
+            return await DeserializeApiResponseAsync<CloudflareRulesetApiResult>(createResponse, cancellationToken, createPath);
         }
 
-        if (!string.IsNullOrWhiteSpace(rule.Description))
+        if (!response.IsSuccessStatusCode)
         {
-            yield return rule.Description.Trim();
+            var error = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new InvalidOperationException($"Cloudflare API request to '{path}' failed: {response.StatusCode} - {error}");
         }
+
+        return await DeserializeApiResponseAsync<CloudflareRulesetApiResult>(response, cancellationToken, path);
     }
 
     private static string GetSecurityRuleReference(CloudflareSecurityRule rule)
@@ -701,6 +647,30 @@ public class CloudflareApiService : ICloudflareApiService
 
         return _baseUrl + relativePath;
     }
+
+    private static string ResolveBaseUrl(string? configuredBaseUrl)
+    {
+        const string defaultBaseUrl = "https://api.cloudflare.com/client/v4";
+
+        if (string.IsNullOrWhiteSpace(configuredBaseUrl))
+        {
+            return defaultBaseUrl;
+        }
+
+        var trimmed = configuredBaseUrl.Trim().TrimEnd('/');
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
+        {
+            return defaultBaseUrl;
+        }
+
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        {
+            return defaultBaseUrl;
+        }
+
+        return trimmed;
+    }
 }
 
 // Cloudflare API response models
@@ -748,29 +718,23 @@ public class CloudflareSecurityRuleApiResult
     public string Action { get; set; } = string.Empty;
 
     [JsonPropertyName("description")]
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
+
+    [JsonPropertyName("expression")]
+    public string? Expression { get; set; }
 
     [JsonPropertyName("ref")]
     public string? Ref { get; set; }
 
-    [JsonPropertyName("paused")]
-    public bool Paused { get; set; }
-
-    [JsonPropertyName("filter")]
-    public CloudflareSecurityRuleFilterApiResult? Filter { get; set; }
+    [JsonPropertyName("enabled")]
+    public bool? Enabled { get; set; }
 }
 
-public class CloudflareSecurityRuleFilterApiResult
+public class CloudflareRulesetApiResult
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
 
-    [JsonPropertyName("expression")]
-    public string Expression { get; set; } = string.Empty;
-
-    [JsonPropertyName("paused")]
-    public bool Paused { get; set; }
-
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
+    [JsonPropertyName("rules")]
+    public CloudflareSecurityRuleApiResult[] Rules { get; set; } = [];
 }

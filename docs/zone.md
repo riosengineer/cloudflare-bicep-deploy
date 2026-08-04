@@ -2,22 +2,7 @@
 
 Manages a Cloudflare DNS Zone
 
-## Example usage
-
-### Creating a basic DNS zone
-
-This example shows how to create a DNS zone in Cloudflare using Bicep.
-
-```bicep
-resource zone 'Zone' = {
-  name: 'zone'
-  plan: 'plan'
-  nameServers: [
-    'ns1.example.com'
-    'ns2.example.com'
-  ]
-}
-```
+Reference template: [Sample/dns.bicep](../Sample/dns.bicep)
 
 ## Argument reference
 
