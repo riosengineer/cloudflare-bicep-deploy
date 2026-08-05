@@ -82,13 +82,162 @@ public class CloudflareSecurityRuleHandlerTests
         handler.Should().NotBeNull();
     }
 
+    // --- CreateOrUpdate behavioural tests ---
+
     [TestMethod]
-    public void Constructor_Parameterless_CreatesHandler()
+    public async Task CreateOrUpdate_NewRule_CreatesRuleAndReturnsRuleId()
     {
-        // Arrange & Act
-        var handler = new CloudflareSecurityRuleHandler();
+        // Arrange
+        var properties = new CloudflareSecurityRule
+        {
+            Name = "block-cn",
+            ZoneId = "zone-abc",
+            Expression = "(ip.src.country eq \"CN\")",
+            Action = "block"
+        };
+
+        _mockApiService.Setup(s => s.FindSecurityRuleAsync("zone-abc", It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareSecurityRuleApiResult?)null);
+
+        _mockApiService.Setup(s => s.UpsertSecurityRuleAsync(It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudflareSecurityRule
+            {
+                Name = "block-cn",
+                ZoneId = "zone-abc",
+                Expression = "(ip.src.country eq \"CN\")",
+                Action = "block",
+                RuleId = "rule-id-001",
+                Enabled = true,
+                Reference = "block-cn"
+            });
+
+        // Act
+        var result = await HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
 
         // Assert
-        handler.Should().NotBeNull();
+        result.RuleId.Should().Be("rule-id-001");
+        result.Action.Should().Be("block");
+        _mockApiService.Verify(s => s.UpsertSecurityRuleAsync(It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CreateOrUpdate_ExistingRule_SetsRuleIdBeforeUpsert()
+    {
+        // Arrange
+        var properties = new CloudflareSecurityRule
+        {
+            Name = "block-cn",
+            ZoneId = "zone-abc",
+            Expression = "(ip.src.country eq \"CN\")",
+            Action = "block"
+        };
+
+        _mockApiService.Setup(s => s.FindSecurityRuleAsync("zone-abc", It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudflareSecurityRuleApiResult { Id = "rule-existing-999", Ref = "block-cn" });
+
+        _mockApiService.Setup(s => s.UpsertSecurityRuleAsync(It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareSecurityRule rule, CancellationToken _) => rule);
+
+        // Act
+        await HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
+
+        // Assert — UpsertSecurityRuleAsync must receive the RuleId so it performs a PATCH
+        _mockApiService.Verify(s => s.UpsertSecurityRuleAsync(
+            It.Is<CloudflareSecurityRule>(r => r.RuleId == "rule-existing-999"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CreateOrUpdate_InvalidAction_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var properties = new CloudflareSecurityRule
+        {
+            Name = "bad-action-rule",
+            ZoneId = "zone-abc",
+            Expression = "(ip.src.country eq \"CN\")",
+            Action = "deny" // not a valid Cloudflare action
+        };
+
+        _mockApiService.Setup(s => s.FindSecurityRuleAsync(It.IsAny<string>(), It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareSecurityRuleApiResult?)null);
+
+        // Act
+        var act = () => HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*deny*not supported*");
+    }
+
+    [TestMethod]
+    public async Task CreateOrUpdate_MissingZoneId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var properties = new CloudflareSecurityRule
+        {
+            Name = "rule",
+            ZoneId = "",
+            Expression = "(ip.src.country eq \"CN\")",
+            Action = "block"
+        };
+
+        // Act
+        var act = () => HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*ZoneId is required*");
+    }
+
+    [TestMethod]
+    [DataRow("BLOCK", "block")]
+    [DataRow("Allow", "allow")]
+    [DataRow("LOG", "log")]
+    public async Task CreateOrUpdate_NormalizesActionCasing(string inputAction, string expectedNormalizedAction)
+    {
+        // Arrange
+        var properties = new CloudflareSecurityRule
+        {
+            Name = "normalize-test",
+            ZoneId = "zone-abc",
+            Expression = "(ip.src.country eq \"US\")",
+            Action = inputAction
+        };
+
+        _mockApiService.Setup(s => s.FindSecurityRuleAsync(It.IsAny<string>(), It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareSecurityRuleApiResult?)null);
+
+        _mockApiService.Setup(s => s.UpsertSecurityRuleAsync(It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareSecurityRule rule, CancellationToken _) => rule);
+
+        // Act
+        await HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
+
+        // Assert — action should be normalized before being passed to the service
+        _mockApiService.Verify(s => s.UpsertSecurityRuleAsync(
+            It.Is<CloudflareSecurityRule>(r => r.Action == expectedNormalizedAction),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Preview_ReturnsPropertiesWithoutCallingApi()
+    {
+        // Arrange
+        var properties = new CloudflareSecurityRule
+        {
+            Name = "block-cn",
+            ZoneId = "zone-abc",
+            Expression = "(ip.src.country eq \"CN\")",
+            Action = "block"
+        };
+
+        // Act
+        var result = await HandlerTestHelper.InvokePreviewAsync(_handler, properties);
+
+        // Assert
+        result.Name.Should().Be("block-cn");
+        _mockApiService.Verify(s => s.UpsertSecurityRuleAsync(It.IsAny<CloudflareSecurityRule>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
+

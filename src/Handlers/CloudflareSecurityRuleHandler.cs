@@ -8,10 +8,6 @@ public class CloudflareSecurityRuleHandler : TypedResourceHandler<CloudflareSecu
 {
     private readonly ICloudflareApiServiceFactory _apiServiceFactory;
 
-    public CloudflareSecurityRuleHandler() : this(new CloudflareApiServiceFactory())
-    {
-    }
-
     public CloudflareSecurityRuleHandler(ICloudflareApiServiceFactory apiServiceFactory)
     {
         _apiServiceFactory = apiServiceFactory;

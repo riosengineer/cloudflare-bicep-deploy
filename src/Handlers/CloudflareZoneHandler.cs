@@ -8,10 +8,6 @@ public class CloudflareZoneHandler : TypedResourceHandler<CloudflareZone, Cloudf
 {
     private readonly ICloudflareApiServiceFactory _apiServiceFactory;
 
-    public CloudflareZoneHandler() : this(new CloudflareApiServiceFactory())
-    {
-    }
-
     public CloudflareZoneHandler(ICloudflareApiServiceFactory apiServiceFactory)
     {
         _apiServiceFactory = apiServiceFactory;

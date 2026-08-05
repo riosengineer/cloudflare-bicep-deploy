@@ -8,10 +8,6 @@ public class CloudflareRedirectRuleHandler : TypedResourceHandler<CloudflareRedi
 {
     private readonly ICloudflareApiServiceFactory _apiServiceFactory;
 
-    public CloudflareRedirectRuleHandler() : this(new CloudflareApiServiceFactory())
-    {
-    }
-
     public CloudflareRedirectRuleHandler(ICloudflareApiServiceFactory apiServiceFactory)
     {
         _apiServiceFactory = apiServiceFactory;
