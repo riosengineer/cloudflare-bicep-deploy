@@ -254,6 +254,53 @@ public class CloudflareApiService : ICloudflareApiService
         }
     }
 
+    public async Task<CloudflarePageRuleApiResult?> FindRedirectRuleAsync(string zoneId, CloudflareRedirectRule rule, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(zoneId);
+        ArgumentNullException.ThrowIfNull(rule);
+
+        if (!string.IsNullOrWhiteSpace(rule.PageRuleId))
+        {
+            var path = $"/zones/{zoneId}/pagerules/{rule.PageRuleId}";
+            var response = await SendWithRetryAsync(() => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)), cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound) return null;
+            if (!response.IsSuccessStatusCode) return null;
+            return await DeserializeApiResponseAsync<CloudflarePageRuleApiResult>(response, cancellationToken, path);
+        }
+
+        var listPath = $"/zones/{zoneId}/pagerules?status=active";
+        var listResponse = await SendWithRetryAsync(() => new HttpRequestMessage(HttpMethod.Get, BuildUrl(listPath)), cancellationToken);
+        if (!listResponse.IsSuccessStatusCode) return null;
+        var all = await DeserializeApiResponseAsync<CloudflarePageRuleApiResult[]>(listResponse, cancellationToken, listPath);
+        return all.FirstOrDefault(pr =>
+            pr.Targets.Any(t => string.Equals(t.Constraint?.Value, rule.UrlPattern, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    public async Task<CloudflareRedirectRule> UpsertRedirectRuleAsync(CloudflareRedirectRule rule, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+
+        if (string.IsNullOrWhiteSpace(rule.ZoneId))
+            throw new InvalidOperationException($"ZoneId is required to manage redirect rule '{rule.Name}'.");
+
+        var payload = BuildPageRulePayload(rule);
+
+        if (!string.IsNullOrWhiteSpace(rule.PageRuleId))
+        {
+            var path = $"/zones/{rule.ZoneId}/pagerules/{rule.PageRuleId}";
+            var response = await SendJsonAsync(HttpMethod.Put, path, payload, cancellationToken);
+            var apiRule = await DeserializeApiResponseAsync<CloudflarePageRuleApiResult>(response, cancellationToken, path);
+            return MapApiPageRule(rule, apiRule);
+        }
+        else
+        {
+            var path = $"/zones/{rule.ZoneId}/pagerules";
+            var response = await SendJsonAsync(HttpMethod.Post, path, payload, cancellationToken);
+            var apiRule = await DeserializeApiResponseAsync<CloudflarePageRuleApiResult>(response, cancellationToken, path);
+            return MapApiPageRule(rule, apiRule);
+        }
+    }
+
     public void Dispose()
     {
         _httpClient?.Dispose();
@@ -509,6 +556,59 @@ public class CloudflareApiService : ICloudflareApiService
         return string.IsNullOrWhiteSpace(rule.Name) ? string.Empty : rule.Name.Trim();
     }
 
+    private static Dictionary<string, object?> BuildPageRulePayload(CloudflareRedirectRule rule)
+        => new()
+        {
+            ["targets"] = new[]
+            {
+                new Dictionary<string, object?>
+                {
+                    ["target"] = "url",
+                    ["constraint"] = new Dictionary<string, object?>
+                    {
+                        ["operator"] = "matches",
+                        ["value"] = rule.UrlPattern
+                    }
+                }
+            },
+            ["actions"] = new[]
+            {
+                new Dictionary<string, object?>
+                {
+                    ["id"] = "forwarding_url",
+                    ["value"] = new Dictionary<string, object?>
+                    {
+                        ["url"] = rule.RedirectUrl,
+                        ["status_code"] = rule.StatusCode
+                    }
+                }
+            },
+            ["priority"] = rule.Priority,
+            ["status"] = rule.Enabled ? "active" : "disabled"
+        };
+
+    private static CloudflareRedirectRule MapApiPageRule(CloudflareRedirectRule rule, CloudflarePageRuleApiResult apiRule)
+    {
+        rule.PageRuleId = apiRule.Id;
+        rule.Enabled = string.Equals(apiRule.Status, "active", StringComparison.OrdinalIgnoreCase);
+        rule.Priority = apiRule.Priority;
+
+        var target = apiRule.Targets.FirstOrDefault(t => string.Equals(t.Target, "url", StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(target?.Constraint?.Value))
+        {
+            rule.UrlPattern = target.Constraint.Value;
+        }
+
+        var forwarding = apiRule.Actions.FirstOrDefault(a => string.Equals(a.Id, "forwarding_url", StringComparison.OrdinalIgnoreCase));
+        if (forwarding?.Value is not null)
+        {
+            rule.RedirectUrl = forwarding.Value.Url;
+            rule.StatusCode = forwarding.Value.StatusCode;
+        }
+
+        return rule;
+    }
+
     private static IEnumerable<string> GetRecordLookupNames(CloudflareDnsRecord record)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -743,4 +843,58 @@ public class CloudflareRulesetApiResult
 
     [JsonPropertyName("rules")]
     public CloudflareSecurityRuleApiResult[] Rules { get; set; } = [];
+}
+
+public class CloudflarePageRuleApiResult
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("priority")]
+    public int Priority { get; set; }
+
+    [JsonPropertyName("targets")]
+    public CloudflarePageRuleTarget[] Targets { get; set; } = [];
+
+    [JsonPropertyName("actions")]
+    public CloudflarePageRuleAction[] Actions { get; set; } = [];
+}
+
+public class CloudflarePageRuleTarget
+{
+    [JsonPropertyName("target")]
+    public string Target { get; set; } = string.Empty;
+
+    [JsonPropertyName("constraint")]
+    public CloudflarePageRuleConstraint? Constraint { get; set; }
+}
+
+public class CloudflarePageRuleConstraint
+{
+    [JsonPropertyName("operator")]
+    public string Operator { get; set; } = string.Empty;
+
+    [JsonPropertyName("value")]
+    public string Value { get; set; } = string.Empty;
+}
+
+public class CloudflarePageRuleAction
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("value")]
+    public CloudflarePageRuleForwardingValue? Value { get; set; }
+}
+
+public class CloudflarePageRuleForwardingValue
+{
+    [JsonPropertyName("url")]
+    public string Url { get; set; } = string.Empty;
+
+    [JsonPropertyName("status_code")]
+    public int StatusCode { get; set; }
 }

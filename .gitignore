@@ -7,3 +7,5 @@ obj/
 .vscode/tasks.json
 .vscode/mcp.json
 file:bin/cloudflare.tgz
+# local param overrides with real zone IDs — never committed
+*.local.bicepparam

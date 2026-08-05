@@ -16,7 +16,8 @@ builder.Services
         configurationType: typeof(Configuration))
     .WithResourceHandler<CloudflareZoneHandler>()
     .WithResourceHandler<CloudflareDnsRecordHandler>()
-    .WithResourceHandler<CloudflareSecurityRuleHandler>();
+    .WithResourceHandler<CloudflareSecurityRuleHandler>()
+    .WithResourceHandler<CloudflareRedirectRuleHandler>();
 
 var app = builder.Build();
 
