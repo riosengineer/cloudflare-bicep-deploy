@@ -82,13 +82,118 @@ public class CloudflareDnsRecordHandlerTests
         handler.Should().NotBeNull();
     }
 
+    // --- CreateOrUpdate behavioural tests ---
+
     [TestMethod]
-    public void Constructor_Parameterless_CreatesHandler()
+    public async Task CreateOrUpdate_NewRecord_CreatesAndReturnsRecordId()
     {
-        // Arrange & Act
-        var handler = new CloudflareDnsRecordHandler();
+        // Arrange
+        var properties = new CloudflareDnsRecord
+        {
+            Name = "test",
+            ZoneName = "example.com",
+            ZoneId = "zone-abc",
+            Type = "A",
+            Content = "192.168.1.1"
+        };
+
+        _mockApiService.Setup(s => s.FindDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareDnsRecordApiResult?)null);
+
+        _mockApiService.Setup(s => s.UpsertDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudflareDnsRecord
+            {
+                Name = "test.example.com",
+                ZoneName = "example.com",
+                ZoneId = "zone-abc",
+                Type = "A",
+                Content = "192.168.1.1",
+                RecordId = "rec-xyz-789",
+                Proxiable = true
+            });
+
+        // Act
+        var result = await HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
 
         // Assert
-        handler.Should().NotBeNull();
+        result.RecordId.Should().Be("rec-xyz-789");
+        result.Proxiable.Should().BeTrue();
+        _mockApiService.Verify(s => s.UpsertDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CreateOrUpdate_ExistingRecord_SetsRecordIdBeforeUpsert()
+    {
+        // Arrange
+        var properties = new CloudflareDnsRecord
+        {
+            Name = "test",
+            ZoneName = "example.com",
+            ZoneId = "zone-abc",
+            Type = "A",
+            Content = "10.0.0.1"
+        };
+
+        _mockApiService.Setup(s => s.FindDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CloudflareDnsRecordApiResult { Id = "existing-rec-111" });
+
+        _mockApiService.Setup(s => s.UpsertDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CloudflareDnsRecord rec, CancellationToken _) =>
+            {
+                rec.RecordId ??= "fallback-id";
+                return rec;
+            });
+
+        // Act
+        var result = await HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
+
+        // Assert — UpsertDnsRecordAsync must receive the RecordId so it can PUT instead of POST
+        _mockApiService.Verify(s => s.UpsertDnsRecordAsync(
+            It.Is<CloudflareDnsRecord>(r => r.RecordId == "existing-rec-111"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task CreateOrUpdate_MissingZoneId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var properties = new CloudflareDnsRecord
+        {
+            Name = "test",
+            ZoneName = "example.com",
+            ZoneId = "",
+            Type = "A",
+            Content = "192.168.1.1"
+        };
+
+        // Act
+        var act = () => HandlerTestHelper.InvokeCreateOrUpdateAsync(_handler, properties);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*ZoneId is required*");
+    }
+
+    [TestMethod]
+    public async Task Preview_ReturnsPropertiesWithoutCallingApi()
+    {
+        // Arrange
+        var properties = new CloudflareDnsRecord
+        {
+            Name = "test",
+            ZoneName = "example.com",
+            ZoneId = "zone-abc",
+            Type = "CNAME",
+            Content = "alias.example.com"
+        };
+
+        // Act
+        var result = await HandlerTestHelper.InvokePreviewAsync(_handler, properties);
+
+        // Assert
+        result.Name.Should().Be("test");
+        _mockApiService.Verify(s => s.UpsertDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockApiService.Verify(s => s.FindDnsRecordAsync(It.IsAny<CloudflareDnsRecord>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
+

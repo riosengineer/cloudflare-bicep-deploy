@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Linq;
-using System.Reflection;
 using CloudflareExtension.Models;
 
 namespace CloudflareExtension.Services;
@@ -16,7 +15,6 @@ namespace CloudflareExtension.Services;
 public class CloudflareApiService : ICloudflareApiService
 {
     private readonly HttpClient _httpClient;
-    private readonly Configuration _config;
     private readonly string _baseUrl;
     private static readonly JsonSerializerOptions ApiSerializerOptions = new()
     {
@@ -25,30 +23,10 @@ public class CloudflareApiService : ICloudflareApiService
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public CloudflareApiService(Configuration config)
+    public CloudflareApiService(HttpClient httpClient, Configuration config)
     {
-        _config = config;
-        _config.Validate();
-
-        _baseUrl = ResolveBaseUrl(_config.BaseUrl);
-
-        _httpClient = new HttpClient();
-        // Don't set BaseAddress - use full URLs instead
-
-        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
-        _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("cloudflare-bicep-extension", version));
-        _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("(+https://github.com/riosengineer/cloudflare-bicep-deploy)"));
-
-        // Only set the essential Authorization header
-        if (!string.IsNullOrEmpty(_config.ApiToken))
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _config.ApiToken);
-        }
-        else if (!string.IsNullOrEmpty(_config.ApiKey) && !string.IsNullOrEmpty(_config.Email))
-        {
-            _httpClient.DefaultRequestHeaders.Add("X-Auth-Key", _config.ApiKey);
-            _httpClient.DefaultRequestHeaders.Add("X-Auth-Email", _config.Email);
-        }
+        _httpClient = httpClient;
+        _baseUrl = ResolveBaseUrl(config.BaseUrl);
     }
 
     /// <summary>
@@ -79,6 +57,10 @@ public class CloudflareApiService : ICloudflareApiService
         zone.ZoneId = apiZone.Id;
         zone.Status = apiZone.Status;
         zone.NameServers = apiZone.NameServers;
+        if (!string.IsNullOrEmpty(apiZone.Plan?.Id))
+        {
+            zone.Plan = apiZone.Plan.Id;
+        }
         
         return zone;
     }
@@ -112,7 +94,7 @@ public class CloudflareApiService : ICloudflareApiService
             Name = apiZone.Name,
             ZoneId = apiZone.Id,
             Status = apiZone.Status,
-            Plan = "free",
+            Plan = !string.IsNullOrEmpty(apiZone.Plan?.Id) ? apiZone.Plan.Id : "free",
             NameServers = apiZone.NameServers,
             Paused = apiZone.Paused
         };
@@ -307,7 +289,7 @@ public class CloudflareApiService : ICloudflareApiService
 
     public void Dispose()
     {
-        _httpClient?.Dispose();
+        // HttpClient lifetime is managed by IHttpClientFactory; do not dispose here.
     }
 
     private Dictionary<string, object?> BuildSecurityRulePayload(CloudflareSecurityRule rule, bool includeRef)
@@ -716,7 +698,7 @@ public class CloudflareApiService : ICloudflareApiService
             throw new InvalidOperationException($"Cloudflare API request to '{path}' failed: {response.StatusCode} - {error}");
         }
 
-    var results = await DeserializeApiResponseAsync<T[]>(response, cancellationToken, path);
+        var results = await DeserializeApiResponseAsync<T[]>(response, cancellationToken, path);
         return results.Length > 0 ? results[0] : default;
     }
 
@@ -797,6 +779,12 @@ public class CloudflareApiError
     public string Message { get; set; } = string.Empty;
 }
 
+public class CloudflareZonePlanApiResult
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+}
+
 public class CloudflareZoneApiResult
 {
     public string Id { get; set; } = string.Empty;
@@ -804,6 +792,7 @@ public class CloudflareZoneApiResult
     public string Status { get; set; } = string.Empty;
     public bool Paused { get; set; }
     public string[] NameServers { get; set; } = [];
+    public CloudflareZonePlanApiResult? Plan { get; set; }
 }
 
 public class CloudflareDnsRecordApiResult

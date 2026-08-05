@@ -8,10 +8,6 @@ public class CloudflareDnsRecordHandler : TypedResourceHandler<CloudflareDnsReco
 {
     private readonly ICloudflareApiServiceFactory _apiServiceFactory;
 
-    public CloudflareDnsRecordHandler() : this(new CloudflareApiServiceFactory())
-    {
-    }
-
     public CloudflareDnsRecordHandler(ICloudflareApiServiceFactory apiServiceFactory)
     {
         _apiServiceFactory = apiServiceFactory;
@@ -44,16 +40,6 @@ public class CloudflareDnsRecordHandler : TypedResourceHandler<CloudflareDnsReco
                 if (existingRecord is not null)
                 {
                     request.Properties.RecordId = existingRecord.Id;
-                }
-            }
-
-            var normalizedInputZone = request.Properties.ZoneName?.Trim().TrimEnd('.') ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(request.Properties.ZoneId))
-            {
-                var zone = await apiService.GetZoneAsync(normalizedInputZone, cancellationToken);
-                if (zone is not null && !string.Equals(zone.Name, normalizedInputZone, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException($"Zone name '{request.Properties.ZoneName}' does not match the Cloudflare zone '{zone.Name}' (ID {request.Properties.ZoneId}).");
                 }
             }
 
