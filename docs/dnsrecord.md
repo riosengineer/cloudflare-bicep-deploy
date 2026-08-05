@@ -2,24 +2,7 @@
 
 Manages a Cloudflare DNS Record
 
-## Example usage
-
-### Creating a basic DNS record
-
-This example shows how to create a DNS record in Cloudflare using Bicep.
-
-```bicep
-resource cnameRecord 'DnsRecord' = {
-  name: 'cname'
-  zoneName: domainName
-  zoneId: zoneId
-  type: 'CNAME'
-  content: 'test.example.com'
-  ttl: 300
-  proxied: false
-  comment: 'DNS record created via Bicep'
-}
-```
+Reference template: [Sample/dns.bicep](../Sample/dns.bicep)
 
 ## Argument reference
 

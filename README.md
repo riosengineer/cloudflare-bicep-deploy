@@ -19,7 +19,7 @@ Experimental / sample only. Limited functionality to:
 - Create Cloudflare DNS Records (A, AAAA, CNAME, MX, TXT, SRV, PTR, NS, CAA)
 - Manage DNS record properties (content, TTL, proxied status)
 - Support for multiple Cloudflare zones
-- Apply Cloudflare Security Rules (Security Rules API)
+- Apply Cloudflare WAF Custom Rules (Rulesets API)
 - Idempotent updates when running `bicep local-deploy` multiple times (DNS records and security rules are updated in place)
 - Free Plan only currently
 
@@ -85,7 +85,7 @@ output securityRuleId string = blockCountryTraffic.ruleId
 Run `bicep local-deploy Samples/dns.bicepparam`
 
 > [!NOTE]
-> The `SecurityRule` resource maps to the Cloudflare [Security Rules](https://developers.cloudflare.com/security/rules/) API and supports the free plan feature set.
+> The `SecurityRule` resource maps to Cloudflare [WAF custom rules](https://developers.cloudflare.com/waf/custom-rules/) through the Rulesets API and supports the free plan feature set.
 > Specify the optional `reference` property when you need a custom Cloudflare identifier; the extension otherwise defaults it to the resource name on first deploy.
 
 For comprehensive usage examples, please refer to the [`Sample/`](Sample/) directory in this repository.

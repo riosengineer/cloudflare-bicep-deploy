@@ -195,11 +195,8 @@ public class CloudflareSecurityRule : CloudflareSecurityRuleIdentifiers
     [TypeProperty("Action applied to matching requests (allow, block, challenge, js_challenge, managed_challenge, log)", ObjectTypePropertyFlags.Required)]
     public required string Action { get; set; }
 
-    [TypeProperty("Cloudflare security rule ID (output only)")]
+    [TypeProperty("Cloudflare custom rule ID (output only)")]
     public string? RuleId { get; set; }
-
-    [TypeProperty("Cloudflare filter ID associated with this security rule (output only)")]
-    public string? FilterId { get; set; }
 
     [TypeProperty("Optional reference identifier persisted with the rule; defaults to the resource name on create")]
     public string? Reference { get; set; }
