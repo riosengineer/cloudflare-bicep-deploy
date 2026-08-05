@@ -277,7 +277,7 @@ public class CloudflareApiService : ICloudflareApiService
         if (!listResponse.IsSuccessStatusCode) return null;
         var all = await DeserializeApiResponseAsync<CloudflarePageRuleApiResult[]>(listResponse, cancellationToken, listPath);
         return all.FirstOrDefault(pr =>
-            pr.Targets.Any(t => string.Equals(t.Constraint?.Value, rule.UrlPattern, StringComparison.OrdinalIgnoreCase)));
+            pr.Targets?.Any(t => string.Equals(t.Constraint?.Value, rule.UrlPattern, StringComparison.OrdinalIgnoreCase)) == true);
     }
 
     public async Task<CloudflareRedirectRule> UpsertRedirectRuleAsync(CloudflareRedirectRule rule, CancellationToken cancellationToken = default)
