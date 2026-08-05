@@ -272,7 +272,7 @@ public class CloudflareApiService : ICloudflareApiService
             return await DeserializeApiResponseAsync<CloudflarePageRuleApiResult>(response, cancellationToken, path);
         }
 
-        var listPath = $"/zones/{zoneId}/pagerules?status=active";
+        var listPath = $"/zones/{zoneId}/pagerules";
         var listResponse = await SendWithRetryAsync(() => new HttpRequestMessage(HttpMethod.Get, BuildUrl(listPath)), cancellationToken);
         if (!listResponse.IsSuccessStatusCode) return null;
         var all = await DeserializeApiResponseAsync<CloudflarePageRuleApiResult[]>(listResponse, cancellationToken, listPath);
