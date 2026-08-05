@@ -603,7 +603,7 @@ public class CloudflareApiService : ICloudflareApiService
             rule.UrlPattern = target.Constraint.Value;
         }
 
-        var forwarding = apiRule.Actions.FirstOrDefault(a => string.Equals(a.Id, "forwarding_url", StringComparison.OrdinalIgnoreCase));
+        var forwarding = apiRule.Actions?.FirstOrDefault(a => string.Equals(a.Id, "forwarding_url", StringComparison.OrdinalIgnoreCase));
         if (forwarding?.Value is not null)
         {
             rule.RedirectUrl = forwarding.Value.Url;
