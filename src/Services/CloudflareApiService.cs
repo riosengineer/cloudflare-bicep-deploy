@@ -245,7 +245,11 @@ public class CloudflareApiService : ICloudflareApiService
                 payload,
                 cancellationToken);
 
-            var apiRule = await DeserializeApiResponseAsync<CloudflareSecurityRuleApiResult>(response, cancellationToken, path);
+            var updatedRuleset = await DeserializeApiResponseAsync<CloudflareRulesetApiResult>(response, cancellationToken, path);
+            var reference = GetSecurityRuleReference(rule);
+            var apiRule = updatedRuleset.Rules.FirstOrDefault(r => !string.IsNullOrWhiteSpace(reference) && string.Equals(r.Ref, reference, StringComparison.OrdinalIgnoreCase))
+                ?? updatedRuleset.Rules.FirstOrDefault(r => string.Equals(r.Expression, rule.Expression, StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidOperationException("Cloudflare API response did not include the newly created custom rule.");
             return MapApiSecurityRule(rule, apiRule);
         }
     }
