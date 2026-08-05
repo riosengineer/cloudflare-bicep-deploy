@@ -635,7 +635,9 @@ public class CloudflareApiService : ICloudflareApiService
             return _baseUrl;
         }
 
-        if (Uri.TryCreate(relativePath, UriKind.Absolute, out var absolute))
+        if (Uri.TryCreate(relativePath, UriKind.Absolute, out var absolute) &&
+            (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
         {
             return absolute.ToString();
         }
