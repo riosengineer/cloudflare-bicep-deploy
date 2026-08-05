@@ -201,3 +201,52 @@ public class CloudflareSecurityRule : CloudflareSecurityRuleIdentifiers
     [TypeProperty("Optional reference identifier persisted with the rule; defaults to the resource name on create")]
     public string? Reference { get; set; }
 }
+
+public class CloudflareRedirectRuleIdentifiers
+{
+    [TypeProperty("The logical name of the redirect rule", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
+    public required string Name { get; set; }
+
+    [TypeProperty("The zone ID this redirect rule applies to", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
+    public required string ZoneId { get; set; }
+}
+
+[BicepDocHeading("RedirectRule", "Manages a Cloudflare Page Rule URL Redirect (free plan)")]
+[BicepDocExample(
+    "Redirect an old path to a new URL",
+    "Creates a permanent redirect page rule for a specific path using a wildcard URL pattern.",
+    @"resource oldPageRedirect 'RedirectRule' = {
+  name: 'oldPageRedirect'
+  zoneId: zoneId
+  urlPattern: 'example.com/old-page'
+  redirectUrl: 'https://example.com/new-page'
+  statusCode: 301
+  enabled: true
+}
+"
+)]
+[ResourceType("RedirectRule")]
+public class CloudflareRedirectRule : CloudflareRedirectRuleIdentifiers
+{
+    [TypeProperty("Human friendly description shown in the Cloudflare dashboard")]
+    public string? Description { get; set; }
+
+    [TypeProperty("Whether the rule is enabled")]
+    public bool Enabled { get; set; } = true;
+
+    // Page Rules use glob URL patterns, not Wireshark-style expressions
+    [TypeProperty("URL pattern to match using * wildcards (e.g. example.com/old-page*)", ObjectTypePropertyFlags.Required)]
+    public required string UrlPattern { get; set; }
+
+    [TypeProperty("The target URL to redirect matching requests to", ObjectTypePropertyFlags.Required)]
+    public required string RedirectUrl { get; set; }
+
+    [TypeProperty("HTTP status code for the redirect (301 or 302)")]
+    public int StatusCode { get; set; } = 301;
+
+    [TypeProperty("Priority of the page rule (lower number = higher priority)")]
+    public int Priority { get; set; } = 1;
+
+    [TypeProperty("Cloudflare page rule ID (output only)")]
+    public string? PageRuleId { get; set; }
+}
