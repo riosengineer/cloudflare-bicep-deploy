@@ -45,7 +45,7 @@ You will need to create a Cloudflare API token from the [Cloudflare API Tokens p
   - Zone - Config Rules - Edit (URL redirect rules via Page Rules)
 - Zone Resources: Include - Specific Zone - Your Domain
 - Save and make a note of the API Token
-- Make this an enviornment variable `CLOUDFLARE_API_TOKEN` locally (`$env:CLOUDFLARE_API_TOKEN = "here"`), or as a GitHub enviornment secret if running in a pipeline so that `bicep local-deploy` will authenticate successfully.
+- Make this an environment variable `CLOUDFLARE_API_TOKEN` locally (`$env:CLOUDFLARE_API_TOKEN = "here"`), or as a GitHub environment secret if running in a pipeline so that `bicep local-deploy` will authenticate successfully.
 
 ## 📋 Bicep Usage Example
 
