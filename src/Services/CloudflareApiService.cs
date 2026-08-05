@@ -264,7 +264,11 @@ public class CloudflareApiService : ICloudflareApiService
             var path = $"/zones/{zoneId}/pagerules/{rule.PageRuleId}";
             var response = await SendWithRetryAsync(() => new HttpRequestMessage(HttpMethod.Get, BuildUrl(path)), cancellationToken);
             if (response.StatusCode == HttpStatusCode.NotFound) return null;
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new InvalidOperationException($"Cloudflare API request to '{path}' failed: {response.StatusCode} - {error}");
+            }
             return await DeserializeApiResponseAsync<CloudflarePageRuleApiResult>(response, cancellationToken, path);
         }
 
