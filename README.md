@@ -7,7 +7,7 @@ A custom Azure Bicep extension for creating Cloudflare DNS resources through Inf
 
 ## 🚀 Overview
 
-This project provides a Bicep extension that enables you to create Cloudflare DNS records and security rules directly from your Azure Bicep templates.
+This project provides a Bicep extension that enables you to create Cloudflare DNS records, security rules, and URL redirect rules directly from your Azure Bicep templates.
 
 > [!NOTE]
 > This is an experimental Bicep feature and is subject to change. Do not use it in production.
@@ -20,10 +20,11 @@ Experimental / sample only. Limited functionality to:
 - Manage DNS record properties (content, TTL, proxied status)
 - Support for multiple Cloudflare zones
 - Apply Cloudflare WAF Custom Rules (Rulesets API)
-- Idempotent updates when running `bicep local-deploy` multiple times (DNS records and security rules are updated in place)
+- Create URL Redirect Rules via Page Rules (free plan, up to 3 rules)
+- Idempotent updates when running `bicep local-deploy` multiple times (DNS records, security rules, and redirect rules are updated in place)
 - Free Plan only currently
 
-See [`Sample/dns.bicep`](Sample/dns.bicep) and [`Sample/security-rule.bicep`](Sample/security-rule.bicep) for reference templates.
+See [`Sample/dns.bicep`](Sample/dns.bicep), [`Sample/security-rule.bicep`](Sample/security-rule.bicep), and [`Sample/redirect-rule.bicep`](Sample/redirect-rule.bicep) for reference templates.
 
 ## 🚀 Getting Started
 
@@ -39,7 +40,9 @@ You will need to create a Cloudflare API token from the [Cloudflare API Tokens p
 - Create Custom Token
 - Permissions:
   - Zone - DNS - Edit (DNS records)
-  - Zone - Firewall Services - Edit (security rules)
+  - Zone - Zone WAF - Edit (WAF custom / security rules)
+  - Zone - Firewall Services - Edit (legacy firewall support)
+  - Zone - Config Rules - Edit (URL redirect rules via Page Rules)
 - Zone Resources: Include - Specific Zone - Your Domain
 - Save and make a note of the API Token
 - Make this an enviornment variable `CLOUDFLARE_API_TOKEN` locally (`$env:CLOUDFLARE_API_TOKEN = "here"`), or as a GitHub enviornment secret if running in a pipeline so that `bicep local-deploy` will authenticate successfully.
@@ -77,8 +80,19 @@ resource blockCountryTraffic 'SecurityRule' = {
   reference: 'block-country-cn' // Unique ref 
 }
 
+// Redirect rule sample (Page Rules, free plan)
+resource oldPageRedirect 'RedirectRule' = {
+  name: 'oldPageRedirect'
+  zoneId: zoneId
+  urlPattern: 'example.com/old-page'
+  redirectUrl: 'https://example.com/new-page'
+  statusCode: 301
+  enabled: true
+}
+
 output recordName string = txtRecord.name
 output securityRuleId string = blockCountryTraffic.ruleId
+output redirectPageRuleId string = oldPageRedirect.pageRuleId
 ...
 ```
 
@@ -87,6 +101,9 @@ Run `bicep local-deploy Samples/dns.bicepparam`
 > [!NOTE]
 > The `SecurityRule` resource maps to Cloudflare [WAF custom rules](https://developers.cloudflare.com/waf/custom-rules/) through the Rulesets API and supports the free plan feature set.
 > Specify the optional `reference` property when you need a custom Cloudflare identifier; the extension otherwise defaults it to the resource name on first deploy.
+
+> [!NOTE]
+> The `RedirectRule` resource uses Cloudflare [Page Rules](https://developers.cloudflare.com/rules/page-rules/) with a `forwarding_url` action. Free plan supports up to 3 page rules. Use `*` wildcards in `urlPattern` (e.g. `example.com/old/*`) to match multiple paths.
 
 For comprehensive usage examples, please refer to the [`Sample/`](Sample/) directory in this repository.
 
