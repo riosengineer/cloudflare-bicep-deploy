@@ -1,6 +1,6 @@
 # Idempotent Resource Handling
 
-The extension keeps repeated `bicep local-deploy` executions safe by reusing existing Cloudflare resources whenever they already exist. Below is the quick reference for the two resource types with custom logic.
+The extension keeps repeated `bicep local-deploy` executions safe by reusing existing Cloudflare resources when they already exist.
 
 ## DNS Records
 
@@ -10,7 +10,5 @@ The extension keeps repeated `bicep local-deploy` executions safe by reusing exi
 ## Security Rules
 
 - On the first deploy the rule receives a stable `ref` value (by default the resource name, or the optional `reference` property if supplied).
-- Each update tries to line up with existing rules by matching `ref` and expression before falling back to names/descriptions; if nothing matches, it downloads a paged rule list for the zone.
-- When a matching rule is found, the existing `ruleId` (and filter) are reused and a `PUT` updates the rule. New rules are created with `POST` calls.
-
-Whilst this has a performance hit, it stops subsequent template deployments failing entirely which is a better compromise at this stage.
+- Each update evaluates existing rules in the `http_request_firewall_custom` entrypoint ruleset by matching `ruleId`, then `ref`, then expression and descriptions.
+- When a match is found, the existing `ruleId` is reused and a `PATCH` updates the custom rule in place. New rules are created with `POST` calls.

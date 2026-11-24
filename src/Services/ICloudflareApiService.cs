@@ -36,4 +36,14 @@ public interface ICloudflareApiService : IDisposable
     /// Creates or updates a security rule
     /// </summary>
     Task<CloudflareSecurityRule> UpsertSecurityRuleAsync(CloudflareSecurityRule rule, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Finds an existing redirect page rule by URL pattern
+    /// </summary>
+    Task<CloudflarePageRuleApiResult?> FindRedirectRuleAsync(string zoneId, CloudflareRedirectRule rule, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates or updates a redirect page rule
+    /// </summary>
+    Task<CloudflareRedirectRule> UpsertRedirectRuleAsync(CloudflareRedirectRule rule, CancellationToken cancellationToken = default);
 }
